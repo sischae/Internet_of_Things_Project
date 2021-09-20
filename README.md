@@ -19,7 +19,7 @@ The following packages are necessary to run the code. Install packages using "np
   
 ## Usage
 
-To start the server, go to the /src directory and run "node index.js". The Server will listen to port 3000 and will be accessible threw any browser via http://localhost:3000.
+To start the server, go to the /src directory and run "node server.js". The Server will listen to port 3000 and will be accessible threw any browser via http://localhost:3000.
   
 
 ## License
