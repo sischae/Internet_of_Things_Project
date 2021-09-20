@@ -1,1 +1,55 @@
+/* Style the body */
+body {
+    font-family: Arial;
+    margin: 0px;
+    padding: 0px;
+}
 
+/* flex box for the header */
+.flex_header {
+    display: flex;
+    background: #1cd2d9;
+    justify-content: space-between;;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* .flex_header_title */
+.flex_title {
+    padding: 20;
+    font-size: 45px;
+    font-weight: bold;
+    font-style: italic;
+    text-decoration: none;
+    color: white;
+    margin: 15px;
+}
+
+/* flex_user */
+.flex_user {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    font-style: italic;
+    text-decoration: none;
+    color: #149599;
+    margin-left: 5px;
+    margin-bottom: 15px;
+}
+
+
+/* .flex_header_menu */
+.flex_menu {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* flex_menu_item */
+.flex_menu_item {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+    color: #0f6e73;
+    margin-right: 40px;
+}
