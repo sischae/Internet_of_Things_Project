@@ -5,11 +5,16 @@ body {
     padding: 0px;
 }
 
+
+/******************************************************************************************
+HEADER
+******************************************************************************************/
+
 /* flex box for the header */
 .flex_header {
     display: flex;
     background: #1cd2d9;
-    justify-content: space-between;;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
@@ -50,6 +55,36 @@ body {
     font-size: 20px;
     font-weight: normal;
     text-decoration: none;
-    color: #0f6e73;
+    color: #0d6266;
     margin-right: 40px;
+}
+
+
+
+
+/******************************************************************************************
+LOGIN ACTIVITY
+******************************************************************************************/
+
+.flex_log {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 20px;
+    
+    border-style: solid;
+    border-width: 1px;
+    border-color: #1cd2d9;
+    border-radius: 10px;
+    
+    box-shadow: 2px 1px 10px rgb(0 0 0 / 0.3);
+}
+
+.flex_log_data {
+    color: #0d6266;
+    font-size: 20px;
+    font-weight: normal;
+    
+    margin-bottom: 20px;
 }
