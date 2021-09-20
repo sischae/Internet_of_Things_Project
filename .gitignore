@@ -10,4 +10,4 @@
 /doc/user_manual/*.gz
 /doc/user_manual/*.toc
 
-*.DS_Store
+.DS_Store
