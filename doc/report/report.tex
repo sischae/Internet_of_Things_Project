@@ -1,0 +1,91 @@
+\documentclass[11pt, a4paper]{article}
+
+% include packages
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[british]{babel}
+\usepackage{xcolor}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{blindtext}
+\usepackage{acronym} % für Abkürzungsverzeichnis
+\usepackage{colortbl} % background color of single cells in a table
+
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{xstring}
+\usepackage{calc}
+\usepackage{pgfkeys}
+\usepackage{pgfopts}
+
+% define colors
+\definecolor{thiblue}{RGB}{1, 90, 156}
+\definecolor{tf1}{RGB}{204, 238, 255}
+\definecolor{tf2}{RGB}{230, 255, 204}
+
+% set borders
+\geometry{
+	top=2.5cm,
+	bottom=2.5cm,
+	left=2.5cm,
+	right=2.5cm
+}
+
+
+
+\begin{document}
+
+\pagenumbering{Roman}	% page numbering for table of contents
+\tableofcontents
+\newpage
+
+
+
+% abbrevations
+\noindent
+\textbf{\Large{Glossary}}\\
+
+\begin{acronym} \acro{adr}[ADR]{Anschlussdrehzahlregulierung} \end{acronym}
+\begin{acronym} \acro{awd}[AWD]{Allradantrieb} \end{acronym}
+\begin{acronym} \acro{bdc}[BDC]{Body Domain Controller} \end{acronym}
+\begin{acronym} \acro{dsc}[DSC]{Dynamic Stability Control} \end{acronym}
+\begin{acronym} \acro{eps}[EPS]{Electric Power Steering} \end{acronym}
+% Zum Einfügen von Abk. im Text: \ac{Abk.}
+
+
+
+\newpage
+\pagenumbering{arabic}	% page numbering for report
+\setcounter{page}{1} %start counting at one
+
+
+
+% chapter 1
+\section{Chapter 1}
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\\
+
+
+
+% chapter 2
+\section{Chapter 2}
+
+Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\\
+
+
+
+% attachments
+\newpage
+\pagenumbering{Roman}	% page numbering for attachments
+%\thispagestyle{empty}	% no page numbering
+
+% list of figures
+\listoffigures
+
+
+% references
+
+
+\end{document}

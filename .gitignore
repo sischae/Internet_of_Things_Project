@@ -1,0 +1,13 @@
+/doc/report/*.aux
+/doc/report/*.lof
+/doc/report/*.log
+/doc/report/*.gz
+/doc/report/*.toc
+
+/doc/user_manual/*.aux
+/doc/user_manual/*.lof
+/doc/user_manual/*.log
+/doc/user_manual/*.gz
+/doc/user_manual/*.toc
+
+*.DS_Store
