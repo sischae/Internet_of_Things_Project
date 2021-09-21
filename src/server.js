@@ -28,6 +28,11 @@ app.get('/settings', async (req, res, next) => {
     auth_user(req, res, next, 'settings');
 });
 
+// return settings page
+app.get('/control_panel', async (req, res, next) => {
+    auth_user(req, res, next, 'control_panel');
+});
+
 
 // return logout page
 app.get('/logout', async (req, res) => {
@@ -50,6 +55,12 @@ app.get('/activity', async (req, res, next) => {
 app.post('/add_user', async (req, res, next) => {
     auth_user(req, res, next, 'add_user');
 });
+
+// change the password of the current user
+app.post('/change_password', async (req, res, next) => {
+    auth_user(req, res, next, 'change_password');
+});
+
 
 
 
@@ -192,6 +203,40 @@ async function add_user(req, res, next, username, hash, req_role) {
 
 
 /******************************************************************************************
+CHANGE PASSWORD
+******************************************************************************************/
+
+function change_password(req, res, next, username, hash) {
+    // reopen database to add a new user
+    let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+        if (err) {                                                                                  // catch errors
+            return console.error(err.message);
+        }
+    });
+    
+    // change password
+    db.run('UPDATE users SET hash = "' + hash + '" WHERE username = "' + username + '"', function(err) {
+        if (err) {                                                                                  // catch errors
+            return console.log(err.message);                                                        // log
+        }
+    });
+    
+    // close the database connection
+    db.close((err) => {                                                                             // close database connection
+        if (err) {                                                                                  // catch errors
+            res.status(500).send('Internal Error');                                                 // send error information to client
+            return console.error(err.message);                                                      // log
+        }
+        
+        res.status(200).send('OK');
+        next();
+    });
+}
+
+
+
+
+/******************************************************************************************
 AUTHENTICATE USER
 ******************************************************************************************/
 
@@ -261,7 +306,7 @@ function auth_user(req, res, next, redirect) {
                     let time = Date.now();
                     
                     if((time - last_login) > 30 * 60 * 1000) {                                                  // if users last login was more than 30 minutes ago -> new log in
-                        db.run('INSERT INTO log_users(timestamp, user) VALUES("' + Date.now() + '", "' + username + '")', function(err) {
+                        db.run('INSERT INTO log_users(timestamp, user) VALUES("' + time + '", "' + username + '")', function(err) {
                             if (err) {                                                                          // catch errors
                                 return console.log(err.message);                                                // log
                             }
@@ -275,44 +320,72 @@ function auth_user(req, res, next, redirect) {
                     });
     
                     
-                    db.close();                                                                                 // close database connection
-                    
-                    
-                    res.setHeader('WWW-Authenticate', 'Basic');
-                    switch(redirect) {
-                            case 'activity':
-                                get_activity(req, res, next, username, role);
-                                break;
-                            
-                            case 'req_logout':
-                                let db = new sqlite3.Database('./data/data.db');                                // connect to database
-                            
-                                // reset timestamp to indicate log out
-                                db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
-                                    if (err) {                                                                  // catch errors
-                                        return console.log(err.message);                                        // log
-                                    }
-                                });
-                            
-                                db.close();                                                                     // close database connection
-                                res.status(200).send('OK');
-                                break;
-                            
-                            case 'add_user':
-                                // generate new has to store in the database
-                                crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
-                                    if (err) throw err;                                                         // catch errors
+                    db.close((err) => {                                                                             // close database connection
+                        if (err) {                                                                                  // catch errors
+                            res.status(500).send('Internal Error');                                                 // send error information to client
+                            return console.error(err.message);                                                      // log
+                        }
+                        
+                        
+                        res.setHeader('WWW-Authenticate', 'Basic');
+                        switch(redirect) {
+                                case 'activity':
+                                    get_activity(req, res, next, username, role);
+                                    break;
+                                
+                                case 'req_logout':
+                                    db = new sqlite3.Database('./data/data.db');                                    // connect to database
+                                
+                                    // reset timestamp to indicate log out
+                                    db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
+                                        if (err) {                                                                  // catch errors
+                                            console.log('ERROR TRYING TO UPDATE THE DATABASE');
+                                            return console.log(err.message);                                        // log
+                                            
+                                        }
+                                    });
+                                
+                                    db.close((err) => {                                                                             // close database connection
+                                        if (err) {                                                                                  // catch errors
+                                            res.status(500).send('Internal Error');                                                 // send error information to client
+                                            return console.error(err.message);                                                      // log
+                                        }
+                                        
+                                        res.status(200).send('OK');
+                                        next();
+                                    });
                                     
-                                    let hash = derivedKey.toString('hex');
-                                    add_user(req, res, next, req.query.username, hash, role);                   // add a new user with the given username and the created hash
-                                });
-                                break;
-                            
-                            default:
-                                res.render(redirect, {username: username.charAt(0).toUpperCase() + username.slice(1)});     // make first letter uppercase
-                                next();
-                                break;
-                    }
+                                
+                                    
+                                    break;
+                                
+                                case 'add_user':
+                                    // generate new has to store in the database
+                                    crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
+                                        if (err) throw err;                                                         // catch errors
+                                        
+                                        let hash = derivedKey.toString('hex');
+                                        add_user(req, res, next, req.query.username, hash, role);                   // add a new user with the given username and the created hash
+                                    });
+                                    break;
+                                
+                                case 'change_password':
+                                    // generate new has to store in the database
+                                    crypto.pbkdf2(req.query.password, username, 100000, 64, 'sha512', (err, derivedKey) => {
+                                        if (err) throw err;                                                         // catch errors
+                                        
+                                        let hash = derivedKey.toString('hex');
+                                        change_password(req, res, next, username, hash);                            // add a new user with the given username and the created hash
+                                    });
+                                    break;
+                                
+                                default:
+                                    res.render(redirect, {username: username.charAt(0).toUpperCase() + username.slice(1)});     // make first letter uppercase
+                                    next();
+                                    break;
+                        }
+                    });
+                    
                 } else {                                                                                        // invalid login
                     var err = new Error('You are not authenticated!');
                     err.status = 401;

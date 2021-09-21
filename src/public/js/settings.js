@@ -5,6 +5,11 @@ LOGOUT
 ******************************************************************************************/
 
 document.getElementById("logout").addEventListener("click", function() {
+    logout();
+});
+
+
+function logout() {
     // send request to officially log out
     var logout_request = new XMLHttpRequest();
     logout_request.open( "GET", '/req_logout', false );
@@ -19,7 +24,7 @@ document.getElementById("logout").addEventListener("click", function() {
     setTimeout(function () {
         window.location.href = "/logout";
     }, 10);
-});
+}
 
 
 
@@ -82,7 +87,21 @@ SET NEW PASSWORD
 
 document.getElementById('flex_acc_change_pw').addEventListener('submit', e => {
     e.preventDefault();
-    console.log('submit');
+    let pw = document.getElementById('new_pw').value;                                                   // get password from form
+    
+    
+    fetch('/change_password/?password=' + pw, {                                                         // send post request
+        method: 'post',
+    }).then(res => res).then(res => {
+        if(res.status == 200) {                                                                         // user was added successfully
+            alert('[OK] Your password has been changed successfully.');
+            document.getElementById('new_pw').value = '';                                               // reset input for password
+            logout();
+        } else {                                                                                        // something went wrong
+            alert('[ERROR] Something went wrong.');
+            document.getElementById('new_pw').value = '';                                               // reset input for password
+        }
+    });
 });
 
 
@@ -96,8 +115,6 @@ document.getElementById('flex_acc_add_user').addEventListener('submit', e => {
     
     let username = document.getElementById('add_user_username').value;                                  // get username from form
     let pw = document.getElementById('add_user_password').value;                                        // get password from form
-    
-    console.log('debug');
     
     fetch('/add_user/?username=' + username + '&password=' + pw, {                                      // send post request
         method: 'post',
@@ -116,6 +133,8 @@ document.getElementById('flex_acc_add_user').addEventListener('submit', e => {
             document.getElementById('add_user_password').value = '';                                    // reset input for password
         } else {                                                                                        // something went wrong
             alert('[ERROR] Something went wrong.');
+            document.getElementById('add_user_username').value = '';                                    // reset input for username
+            document.getElementById('add_user_password').value = '';                                    // reset input for password
         }
     });
 });
