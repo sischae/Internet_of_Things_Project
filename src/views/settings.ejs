@@ -31,22 +31,20 @@
         
             <!--   log in activity   -->
             <div class="flex_log" id="log_users">
-                <div class="flex_log_data">
-                    <h3>Log in activity</h3>
-                </div>
+                <-- content is is added dynamically -->
             </div>
             
             <!--   account settings   -->
             <div class="flex_acc_settings" id="flex_acc_settings">
                 <form class="flex_acc_change_pw" id="flex_acc_change_pw">
                     <h3 class="flex_acc_settings_input">Change your password</h3>
-                    <input type="password" id="new_pw" class="flex_acc_settings_input" placeholder="Enter a new password">
+                    <input type="password" id="new_pw" class="flex_acc_settings_input" placeholder="Enter a new password" required>
                     <button class="flex_acc_settings_input" id="set_pw">OK</button>
                 </form>
                 <form class="flex_acc_add_user" id="flex_acc_add_user">
                     <h3 class="flex_acc_settings_input">Add a new user</h3>
-                    <input type="text" id="add_user_username" class="flex_acc_settings_input" placeholder="Enter a new username"></br></br>
-                    <input type="password" id="add_user_password" class="flex_acc_settings_input" placeholder="Enter a new password">
+                    <input type="text" id="add_user_username" class="flex_acc_settings_input" placeholder="Enter a new username" required></br></br>
+                    <input type="password" id="add_user_password" class="flex_acc_settings_input" placeholder="Enter a new password" required>
                     <button class="flex_acc_settings_input" id="add_user">OK</button>
                     <div class="info" style="margin-top: 27px;">Only admins can add a new user.</div>
                 </form>
