@@ -50,10 +50,11 @@ app.get('/activity', async (req, res, next) => {
 
 
 
-// FUNCTIONS
+/******************************************************************************************
+GET LOG-IN ACTIVITIY
+******************************************************************************************/
 
-// get a list of all log in activity
-function get_activity(req, res, next) {
+function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
     // open database
@@ -62,20 +63,35 @@ function get_activity(req, res, next) {
             return console.error(err.message);
         }
     });
-
-    // fetch all entries
-    db.serialize(() => {
-        db.each(`SELECT timestamp as timestamp, user as user FROM log_users`, (err, row) => {               // read all entries from table
-        if (err) {                                                                                          // catch errors
-            console.error(err.message);                                                                     // log
-        }
-        
-        let time = new Date(row.timestamp)
-        let time_formatted = time.toLocaleString();
-        log.push({"timestamp":time_formatted,"user":row.user.charAt(0).toUpperCase() + row.user.slice(1)});
+    
+    // check if user has permission to fetch all users data
+    if(role == 'admin') {
+        // fetch all entries
+        db.serialize(() => {
+            db.each(`SELECT timestamp as timestamp, user as user FROM log_users`, (err, row) => {               // read all entries from table
+            if (err) {                                                                                          // catch errors
+                console.error(err.message);                                                                     // log
+            }
+            
+            let time = new Date(row.timestamp)
+            let time_formatted = time.toLocaleString();
+            log.push({"timestamp":time_formatted + ': ',"user":row.user.charAt(0).toUpperCase() + row.user.slice(1)});
+            });
         });
-    });
-
+    } else {
+        // fetch users entries
+        db.serialize(() => {
+            db.each(`SELECT timestamp as timestamp, user as user FROM log_users WHERE user = "` + username + `"`, (err, row) => {
+            if (err) {                                                                                          // catch errors
+                console.error(err.message);                                                                     // log
+            }
+            
+            let time = new Date(row.timestamp)
+            let time_formatted = time.toLocaleString();
+            log.push({"timestamp":time_formatted + ': ',"user":row.user.charAt(0).toUpperCase() + row.user.slice(1)});
+            });
+        });
+    }
     // close the database connection
     db.close((err) => {                                                                                     // close database connection
         if (err) {                                                                                          // catch errors
@@ -89,6 +105,11 @@ function get_activity(req, res, next) {
 }
 
 
+
+
+/******************************************************************************************
+AUTHENTICATE USER
+******************************************************************************************/
 
 // authenticate user an redirect to correct page
 function auth_user(req, res, next, redirect) {
@@ -114,6 +135,7 @@ function auth_user(req, res, next, redirect) {
             let hash_in = derivedKey.toString('hex');                                                           // generate hash for given username and password
             let hash_db = 'init';                                                                               // stores hash from database
             let last_login = 0;
+            let role = '';
 
             
             // open database
@@ -125,7 +147,7 @@ function auth_user(req, res, next, redirect) {
 
             // fetch all users
             db.serialize(() => {
-                db.each(`SELECT username as username, hash as hash, timestamp as timestamp FROM users`, (err, row) => {
+                db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
                     if (err) {                                                                                  // catch errors
                         console.error(err.message);                                                             // log
                     }
@@ -134,6 +156,7 @@ function auth_user(req, res, next, redirect) {
                     if(row.username == username) {                                                              // filter users
                         hash_db = row.hash;                                                                     // get hash from database
                         last_login = row.timestamp;
+                        role = row.role;
                     }
                 });
             });
@@ -154,8 +177,6 @@ function auth_user(req, res, next, redirect) {
                     let time = Date.now();
                     
                     if((time - last_login) > 30 * 60 * 1000) {                                                  // if users last login was more than 30 minutes ago -> new log in
-                        console.log('new login');
-                        
                         db.run('INSERT INTO log_users(timestamp, user) VALUES("' + Date.now() + '", "' + username + '")', function(err) {
                             if (err) {                                                                          // catch errors
                                 return console.log(err.message);                                                // log
@@ -176,7 +197,7 @@ function auth_user(req, res, next, redirect) {
                     res.setHeader('WWW-Authenticate', 'Basic');
                     switch(redirect) {
                             case 'activity':
-                                get_activity(req, res, next);
+                                get_activity(req, res, next, username, role);
                                 break;
                             
                             case 'req_logout':
