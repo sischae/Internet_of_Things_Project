@@ -66,6 +66,8 @@ HEADER
 .rotate {
     animation: rotation 8s infinite linear;
     margin: 5px;
+    width: 68px;
+    height: 68px;
 }
 @keyframes rotation {
   from {
