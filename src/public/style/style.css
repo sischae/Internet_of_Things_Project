@@ -28,6 +28,7 @@ HEADER
     text-decoration: none;
     color: white;
     margin: 15px;
+    margin-left: 5px;
 }
 
 /* flex_user */
@@ -59,6 +60,21 @@ HEADER
     margin-right: 40px;
 }
 
+
+/* rotating fan icon */
+/* icon source: https://www.freepik.com */
+.rotate {
+    animation: rotation 8s infinite linear;
+    margin: 5px;
+}
+@keyframes rotation {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(359deg);
+  }
+}
 
 
 
