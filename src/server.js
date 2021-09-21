@@ -46,6 +46,11 @@ app.get('/activity', async (req, res, next) => {
     auth_user(req, res, next, 'activity');
 });
 
+// add a new user if the user is authorized to
+app.post('/add_user', async (req, res, next) => {
+    auth_user(req, res, next, 'add_user');
+});
+
 
 
 
@@ -58,8 +63,8 @@ function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
     // open database
-    let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                      // connect to database
-        if (err) {                                                                                          // catch errors
+    let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                          // connect to database
+        if (err) {                                                                                              // catch errors
             return console.error(err.message);
         }
     });
@@ -93,15 +98,94 @@ function get_activity(req, res, next, username, role) {
         });
     }
     // close the database connection
-    db.close((err) => {                                                                                     // close database connection
-        if (err) {                                                                                          // catch errors
-            res.status(500).send('Internal Error');                                                         // send error information to client
+    db.close((err) => {                                                                                         // close database connection
+        if (err) {                                                                                              // catch errors
+            res.status(500).send('Internal Error');                                                             // send error information to client
             return console.error(err.message);                                                                  // log
         }
         
         res.status(200).send(JSON.stringify(log.reverse()));                                                    // reverse array to show latest activities first
         next();
     });
+}
+
+
+
+
+/******************************************************************************************
+ADD USER
+******************************************************************************************/
+
+async function add_user(req, res, next, username, hash, req_role) {
+    // check if user has permission to add a new user
+    if(req_role == 'admin') {
+        
+        // open database
+        let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                      // connect to database
+            if (err) {                                                                                          // catch errors
+                return console.error(err.message);
+            }
+        });
+        
+        
+        // check if user already exists in the database
+        let exists = false;
+       
+        db.serialize(() => {
+          db.each(`SELECT username as username FROM users`, (err, row) => {
+              if (err) {                                                                                        // catch errors
+                  console.error(err.message);                                                                   // log
+              }
+              if(username == row.username) {
+                  exists = true;;
+              }
+          });
+        });
+        
+        
+        // close the database connection to wait for db.each
+        db.close((err) => {                                                                                     // close database connection
+            if (err) {                                                                                          // catch errors
+                res.status(500).send('Internal Error');                                                         // send error information to client
+                return console.error(err.message);                                                              // log
+            }
+            
+            if(exists == false) {
+                // reopen database to add a new user
+                db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+                    if (err) {                                                                                  // catch errors
+                        return console.error(err.message);
+                    }
+                });
+                
+                // insert one row into the users table
+                db.run('INSERT INTO users(username, hash, timestamp, role) VALUES("' + username + '", "' + hash + '", 0, "default")', function(err) {
+                    if (err) {                                                                                  // catch errors
+                        return console.log(err.message);                                                        // log
+                    }
+                });
+                
+                // close the database connection
+                db.close((err) => {                                                                             // close database connection
+                    if (err) {                                                                                  // catch errors
+                        res.status(500).send('Internal Error');                                                 // send error information to client
+                        return console.error(err.message);                                                      // log
+                    }
+                    
+                    res.status(200).send('OK');
+                    next();
+                });
+            } else {
+                res.status(409).send('Conflict');
+                next();
+            }
+        });
+    
+    } else {
+        res.status(403).send('Forbidden');
+        next();
+    }
+    
 }
 
 
@@ -205,13 +289,23 @@ function auth_user(req, res, next, redirect) {
                             
                                 // reset timestamp to indicate log out
                                 db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
-                                    if (err) {                                                                              // catch errors
-                                        return console.log(err.message);                                                    // log
+                                    if (err) {                                                                  // catch errors
+                                        return console.log(err.message);                                        // log
                                     }
                                 });
                             
-                                db.close();                                                                                 // close database connection
+                                db.close();                                                                     // close database connection
                                 res.status(200).send('OK');
+                                break;
+                            
+                            case 'add_user':
+                                // generate new has to store in the database
+                                crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
+                                    if (err) throw err;                                                         // catch errors
+                                    
+                                    let hash = derivedKey.toString('hex');
+                                    add_user(req, res, next, req.query.username, hash, role);                   // add a new user with the given username and the created hash
+                                });
                                 break;
                             
                             default:

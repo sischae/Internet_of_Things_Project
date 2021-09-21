@@ -93,6 +93,30 @@ ADD NEW USER
 
 document.getElementById('flex_acc_add_user').addEventListener('submit', e => {
     e.preventDefault();
-    console.log('submit');
+    
+    let username = document.getElementById('add_user_username').value;                                  // get username from form
+    let pw = document.getElementById('add_user_password').value;                                        // get password from form
+    
+    console.log('debug');
+    
+    fetch('/add_user/?username=' + username + '&password=' + pw, {                                      // send post request
+        method: 'post',
+    }).then(res => res).then(res => {
+        if(res.status == 200) {                                                                         // user was added successfully
+            alert('[OK] The user was successfully added to the system.');
+            document.getElementById('add_user_username').value = '';                                    // reset input for username
+            document.getElementById('add_user_password').value = '';                                    // reset input for password
+        } else if(res.status == 403) {                                                                  // permission denied
+            alert('[Forbidden] Only admins can add new users.');
+            document.getElementById('add_user_username').value = '';                                    // reset input for username
+            document.getElementById('add_user_password').value = '';                                    // reset input for password
+        } else if(res.status == 409) {                                                                  // user already exists
+            alert('[Conflict] The user already exists.');
+            document.getElementById('add_user_username').value = '';                                    // reset input for username
+            document.getElementById('add_user_password').value = '';                                    // reset input for password
+        } else {                                                                                        // something went wrong
+            alert('[ERROR] Something went wrong.');
+        }
+    });
 });
 
