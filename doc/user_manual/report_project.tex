@@ -1,0 +1,140 @@
+%% Präamble %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[
+	11pt,		% Schriftgröße
+	a4paper,	% Bogengröße
+	DIV=14,		% Satzspiegel
+	BCOR=5mm,	% Bindekorrekturausgleich
+	cleardoulbleempty, 
+	bibtotoc,
+	parskip=half,
+	]{scrreprt}	
+	
+% Zeilenabstand
+\usepackage{setspace}
+\onehalfspacing
+% Eingabecodierung der Datei
+\usepackage[utf8]{inputenc}
+
+% Schriftcodierung
+\usepackage[T1]{fontenc}
+
+% Sprachraum
+\usepackage[english]{babel}
+	
+% Random-Text
+\usepackage{blindtext}
+
+% Verlinktes PDF-Dokument
+\usepackage{pdfpages}
+
+%Farben
+\usepackage{xcolor}
+
+%Links, Ref
+\usepackage[
+	colorlinks,
+	linkcolor= {black},
+	citecolor= {black}, 
+	urlcolor= {blue}
+%	pdfborder = {0 0 0}
+	]{hyperref}
+
+% Referenzen einbinden
+\usepackage{csquotes}
+\usepackage[
+	backend = biber,
+	style = numeric-comp,
+	block = ragged,  	% Flattersatz
+	]{biblatex}
+\addbibresource{ref/ref.bib}
+
+% Mathemodus
+\usepackage{amsmath,amssymb}
+
+% Symbolverzeichnis
+\usepackage[german, intoc,]{nomencl}
+\usepackage{makeidx}
+\makeindex
+\setlength{\parskip}{2pt}
+\renewcommand{\nomlabelwidth}{2cm}
+\renewcommand{\nomname}{Symbolverzeichnis}
+\usepackage{ifthen}
+\renewcommand{\nomgroup}[1]{ \ifthenelse{\equal{#1}{V}}{ 
+\vspace{2em}\item[\textbf{Variablen}]}{ %
+\ifthenelse{\equal{#1}{A}}{ \item[\textbf{Abkürzungen}]}{}} }
+\makenomenclature
+
+
+% Float Objekte (figures, tables)
+\usepackage{float}
+
+% Schriftarten
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+\newcommand{\contributors}[1]{\textcolor{gray}{#1}\\}
+
+%CodeListings
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\ttfamily\footnotesize,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2
+}
+
+\lstset{style=mystyle}
+%glossar
+%\usepackage{hyperref}
+\usepackage[nonumberlist, acronym, toc, section, automake]{glossaries}
+\makeglossaries
+% Bildereinbinden
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage{import}
+\graphicspath{{img/}}
+
+%Tabellen
+%\usepackage{booktabs}
+
+% Angaben zum Dokument
+
+% Kopf- und Fußzeile
+\usepackage[automark]{scrlayer-scrpage}
+\pagestyle{scrheadings}
+\clearscrheadfoot
+\linespread{1.2}
+\ofoot*{\pagemark}
+\ohead{\headmark}
+
+\includeonly{
+	chapter/front,
+	chapter/introduction,
+	}
+
+%% Dokument %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+    \include{chapter/front}
+	\include{ref/glossary}
+	\tableofcontents
+	
+	\include{chapter/introduction}
+	
+\end{document}
