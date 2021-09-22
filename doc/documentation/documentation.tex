@@ -100,6 +100,9 @@
 	tabsize=2
 }
 
+%table styling (for example flush left)
+\usepackage{array,ragged2e}
+
 \lstset{style=mystyle}
 %glossar
 %\usepackage{hyperref}
@@ -127,6 +130,7 @@
 \includeonly{
 	chapter/front,
 	chapter/introduction,
+	chapter/authentication_and_authorization,
 	}
 
 %% Dokument %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -136,5 +140,6 @@
 	\tableofcontents
 	
 	\include{chapter/introduction}
+	\include{chapter/authentication_and_authorization}
 	
 \end{document}
