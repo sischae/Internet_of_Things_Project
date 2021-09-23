@@ -1,0 +1,56 @@
+\chapter{Interface pages}
+\label{ch:interface_pages}
+
+
+\section{Landing page}
+\label{sec:landing_page}
+
+
+
+\section{Control panel}
+\label{sec:control_panel}
+
+
+
+\section{Settings}
+\label{sec:settings}
+The settings page is available for all logged-in users through the \textit{/settings} route. The settings page displays the same elements for each user, but depending on the users' permission, the content and allowed actions might differ. The settings page displays the login history depending on the user as well as two forms for changing the password and adding a new user to the system.
+
+
+\subsection{Login history}
+\label{subsec:login_history}
+The client will automatically fetch a list of all login events the server has logged to the database. If the user has admin privileges, the server will return all login events, otherwise just those of the current user. The data gets returned as a JSON array.
+After receiving the data, the client checks the number of received events and divides it into a dynamic amount of pages with eight events each. This is done for user experience purposes only. The server then generates a flexbox for each of the eight events and adds it to the login history. It also adds two buttons to switch between the pages of data.
+If the user clicks one of the navigation buttons, the client will reset the displayed list and add the next pages' data by accessing the received data at another index.  The buttons are only active if there are more pages available to load.
+If a page contains less than eight events, the client will add space holder items instead to keep the design consistent.
+
+When the server receives a request for the login history it first checks the permission of the user. If the user has admin privileges, the server will select all data from the \textit{log\_users} table of the main database and return it to the user.  The \textit{log\_users} table is part of the main database and logs all new logins in the following format:
+
+\begin{lstlisting}[label = lst:log_users, language = SQL, numbers = none]
+ CREATE TABLE log_users(timestamp INT, user TEXT);
+\end{lstlisting}
+
+If the user does not have admin privileges, the server will select all entries, where the username equals the user that send the request and return those to the client.
+
+
+\subsection{Change password}
+\label{subsec:change_password}
+The client displays a text input and a button to enable the user to set a new password. The placeholder property will ask the user to enter a password. Both, the input and the button are embedded into a form that has an event handler for "submit" events. Therefore, the user can set a new password by pressing the "OK" button or the "Enter" key.  The input field has the required parameter set to prevent the user from sending a post request with empty parameters.
+
+When the server receives the request to change the password from an authenticated user, it does not need to check permissions. All users are authorized to change their passwords. The server just generates a hash based on the username and the new password and updates the users' entry in the database. The server then will return a status message with a status code.
+
+When the client receives the result from the server, it will clear the input and display an alert to inform the user whether the password was successfully changed or not. If the password was changed, the user needs to log in with the new credentials. For user experience purposes, the client will automatically log out the user and redirect to the logout page.
+
+
+\subsection{Add user}
+\label{subsec:add_user}
+Adding a new user to the system works similarly to changing the password. The client displays two input boxes and asks the user to enter a username and a password. Both inputs are required and the password input is of the type "password". That will hide the entered password and just display dots instead. After the user submitted the input, the client will send a post request to the server to add the new user to the system.
+
+After receiving the request, the server needs to check the users' permission before adding a new user to the system. Only admin accounts are authorized to add new users. If the user does not have the required permission, the server will return a 403 'Forbidden' error to the client. Otherwise, the server will first check if the requested user already exists in the database.  I the user already exists, a 409 'Conflict' error will be returned. If the client requested to add a user that does not already have an entry in the database,  the server will first generate a hash based on username and password and then insert a new user to the database. The role of all users added to the system using the web interface is 'default'. The timestamp is initially set to 0 so the users' first login will automatically be handled as a new login (chapter \ref{sec:user_authentication}). After successfully adding a new user, the server will return a 200 'OK' status to the client.
+
+When the client receives the result from the server, it will clear the input fields and display an alert depending on the received status code.
+
+
+
+\section{Logout}
+\label{sec:logout}
