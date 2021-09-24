@@ -25,7 +25,8 @@ HEADER
 /* flex box for the header */
 .flex_header {
     display: flex;
-    background: #1cd2d9;
+    /*background: #1cd2d9;*/
+    background: #262626;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
@@ -60,7 +61,10 @@ HEADER
 /* .flex_header_menu */
 .flex_menu {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: right;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 /* flex_menu_item */
@@ -69,8 +73,32 @@ HEADER
     font-size: 20px;
     font-weight: normal;
     text-decoration: none;
-    color: #0d6266;
-    margin-right: 40px;
+    /*color: #0d6266;*/
+    color: white;
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.flex_menu_text_active {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+    /*color: #0d6266;*/
+    color: #03ffff;
+    margin-left: 15px;
+    margin-right: 0px;
+}
+
+.flex_menu_text_inactive {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+    /*color: #0d6266;*/
+    color: #c8c9c9;
+    margin-left: 15px;
+    margin-right: 0px;
 }
 
 
@@ -92,6 +120,20 @@ HEADER
 }
 
 
+.menu_icon_inactive {
+    margin: 5px;
+    width: 45px;
+    height: 45px;
+    filter: saturate(0);
+}
+
+.menu_icon_active {
+    margin: 5px;
+    width: 45px;
+    height: 45px;
+    filter: saturate(1);
+}
+
 
 /******************************************************************************************
 SETTINGS
@@ -110,7 +152,8 @@ SETTINGS
 .info {
     font-size: 15px;
     font-style: italic;
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     margin-left: 30px;
     margin-top: 0px;
 }
@@ -131,14 +174,16 @@ LOGIN ACTIVITY
     
     border-style: solid;
     border-width: 1px;
-    border-color: #1cd2d9;
+    /*border-color: #1cd2d9;*/
+    border-color: #262626;
     border-radius: 10px;
     
     box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
 }
 
 .flex_log_data {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -199,7 +244,8 @@ CHANGE PASSWORD
 */
 
 .flex_acc_change_pw {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -210,7 +256,8 @@ CHANGE PASSWORD
     
     border-style: solid;
     border-width: 1px;
-    border-color: #1cd2d9;
+    /*border-color: #1cd2d9;*/
+    border-color: #262626;
     border-radius: 10px;
     
     box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
@@ -221,7 +268,8 @@ ADD NEW USER
 */
 
 .flex_acc_add_user {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -231,7 +279,8 @@ ADD NEW USER
     
     border-style: solid;
     border-width: 1px;
-    border-color: #1cd2d9;
+    /*border-color: #1cd2d9;*/
+    border-color: #262626;
     border-radius: 10px;
     
     box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
