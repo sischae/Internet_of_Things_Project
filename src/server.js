@@ -22,7 +22,7 @@ const path_db = __dirname + '/data/data.db';
 
 // return landing page
 app.get('/', async (req, res, next) => {
-    auth_user(req, res, next, 'index');
+    auth_user(req, res, next, 'control_panel');
 });
 
 
@@ -34,6 +34,12 @@ app.get('/settings', async (req, res, next) => {
 // return settings page
 app.get('/control_panel', async (req, res, next) => {
     auth_user(req, res, next, 'control_panel');
+});
+
+
+// return help page
+app.get('/help', async (req, res, next) => {
+    auth_user(req, res, next, 'help');
 });
 
 

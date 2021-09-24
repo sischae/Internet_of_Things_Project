@@ -12,17 +12,37 @@
         <div class="flex_header">
             <div class="flex_menu">
                 <a href="/" ><img src="/public/img/ventilator_white.png" class="rotate" /></a>
-                <a href="/" class="flex_title">VentPro</a>
-                <div class="flex_user">
-                    
-                    <%= username %>
-                </div>
+                <a href="/" class="flex_title" id="flex_title">VentPro</a>
             </div>
             
-            <div class="flex_menu">
-                <a href="/control_panel" class="flex_menu_item">Control Panel</a>
-                <a href="/settings" class="flex_menu_item">Settings</a>
-                <a href="/" id="logout" class="flex_menu_item">Log out</a>
+            <div class="flex_menu" id="flex_menu">
+                <a href="/help" class="flex_menu_text_inactive" id="menu_help_text">
+                    Help
+                </a>
+                <a href="/help" class="flex_menu_item" id="menu_help">
+                    <img src="/public/img/icon_help.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/control_panel" class="flex_menu_text_active" id="menu_control_panel_text">
+                    Control Panel
+                </a>
+                <a href="/control_panel" class="flex_menu_item" id="menu_control_panel">
+                    <img src="/public/img/icon_control_panel.svg" class="menu_icon_active" />
+                </a>
+                
+                <a href="/settings" class="flex_menu_text_inactive" id="menu_settings_text">
+                    Settings
+                </a>
+                <a href="/settings" class="flex_menu_item" id="menu_settings">
+                    <img src="/public/img/icon_settings.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">
+                    Logout
+                </a>
+                <a href="/" id="logout" class="flex_menu_item" >
+                    <img src="/public/img/icon_logout.svg" class="menu_icon_inactive" />
+                </a>
             </div>
         </div>
         
