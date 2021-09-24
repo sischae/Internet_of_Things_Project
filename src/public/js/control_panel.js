@@ -22,3 +22,17 @@ document.getElementById("logout").addEventListener("click", function() {
 });
 
 
+
+
+/******************************************************************************************
+SWITCH MODE
+******************************************************************************************/
+
+// DEMONSTRATION ONLY
+document.getElementById("trigger_loading_animation").addEventListener("click", function() {
+    document.getElementById("overlay").style.display = "block";
+    setTimeout(function() {
+        document.getElementById("overlay").style.display = "none";
+    }, 2000);
+});
+
