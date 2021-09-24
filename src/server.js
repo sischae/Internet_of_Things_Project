@@ -11,9 +11,12 @@ const crypto = require('crypto');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
-app.use('/public', express.static('public'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.set('views', path.join(__dirname, '/views'));
 
 app.set('view engine', 'ejs');
+
+const path_db = __dirname + '/data/data.db';
 
 
 
@@ -76,7 +79,7 @@ function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
     // open database
-    let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                          // connect to database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                // connect to database
         if (err) {                                                                                              // catch errors
             return console.error(err.message);
         }
@@ -134,7 +137,7 @@ async function add_user(req, res, next, username, hash, req_role) {
     if(req_role == 'admin') {
         
         // open database
-        let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                      // connect to database
+        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                      // connect to database
             if (err) {                                                                                          // catch errors
                 return console.error(err.message);
             }
@@ -165,7 +168,7 @@ async function add_user(req, res, next, username, hash, req_role) {
             
             if(exists == false) {
                 // reopen database to add a new user
-                db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+                db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
                     if (err) {                                                                                  // catch errors
                         return console.error(err.message);
                     }
@@ -210,7 +213,7 @@ CHANGE PASSWORD
 
 function change_password(req, res, next, username, hash) {
     // reopen database to add a new user
-    let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
         if (err) {                                                                                  // catch errors
             return console.error(err.message);
         }
@@ -270,7 +273,7 @@ function auth_user(req, res, next, redirect) {
 
             
             // open database
-            let db = new sqlite3.Database('./data/data.db', sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+            let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                 if (err) {                                                                                      // catch errors
                     return console.error(err.message);                                                          // log
                 }
@@ -302,7 +305,7 @@ function auth_user(req, res, next, redirect) {
                 // compare generated hash with hash from database
                 if (hash_in == hash_db) {                                                                       // If Authorized user
                     // log activity
-                    let db = new sqlite3.Database('./data/data.db');                                            // connect to database
+                    let db = new sqlite3.Database(path_db);                                                     // connect to database
                     
                     // update timestamp of last activity
                     let time = Date.now();
@@ -322,10 +325,10 @@ function auth_user(req, res, next, redirect) {
                     });
     
                     
-                    db.close((err) => {                                                                             // close database connection
-                        if (err) {                                                                                  // catch errors
-                            res.status(500).send('Internal Error');                                                 // send error information to client
-                            return console.error(err.message);                                                      // log
+                    db.close((err) => {                                                                         // close database connection
+                        if (err) {                                                                              // catch errors
+                            res.status(500).send('Internal Error');                                             // send error information to client
+                            return console.error(err.message);                                                  // log
                         }
                         
                         
@@ -336,21 +339,21 @@ function auth_user(req, res, next, redirect) {
                                     break;
                                 
                                 case 'req_logout':
-                                    db = new sqlite3.Database('./data/data.db');                                    // connect to database
+                                    db = new sqlite3.Database(path_db);                                         // connect to database
                                 
                                     // reset timestamp to indicate log out
                                     db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
-                                        if (err) {                                                                  // catch errors
+                                        if (err) {                                                              // catch errors
                                             console.log('ERROR TRYING TO UPDATE THE DATABASE');
-                                            return console.log(err.message);                                        // log
+                                            return console.log(err.message);                                    // log
                                             
                                         }
                                     });
                                 
-                                    db.close((err) => {                                                                             // close database connection
-                                        if (err) {                                                                                  // catch errors
-                                            res.status(500).send('Internal Error');                                                 // send error information to client
-                                            return console.error(err.message);                                                      // log
+                                    db.close((err) => {                                                         // close database connection
+                                        if (err) {                                                              // catch errors
+                                            res.status(500).send('Internal Error');                             // send error information to client
+                                            return console.error(err.message);                                  // log
                                         }
                                         
                                         res.status(200).send('OK');
@@ -364,20 +367,20 @@ function auth_user(req, res, next, redirect) {
                                 case 'add_user':
                                     // generate new has to store in the database
                                     crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
-                                        if (err) throw err;                                                         // catch errors
+                                        if (err) throw err;                                                     // catch errors
                                         
                                         let hash = derivedKey.toString('hex');
-                                        add_user(req, res, next, req.query.username, hash, role);                   // add a new user with the given username and the created hash
+                                        add_user(req, res, next, req.query.username, hash, role);               // add a new user with the given username and the created hash
                                     });
                                     break;
                                 
                                 case 'change_password':
                                     // generate new has to store in the database
                                     crypto.pbkdf2(req.query.password, username, 100000, 64, 'sha512', (err, derivedKey) => {
-                                        if (err) throw err;                                                         // catch errors
+                                        if (err) throw err;                                                     // catch errors
                                         
                                         let hash = derivedKey.toString('hex');
-                                        change_password(req, res, next, username, hash);                            // add a new user with the given username and the created hash
+                                        change_password(req, res, next, username, hash);                        // add a new user with the given username and the created hash
                                     });
                                     break;
                                 
