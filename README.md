@@ -23,7 +23,7 @@ To start the server, go to the /src directory and run "node server.js". The Serv
 
 The user manual for the web interface can be found at https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/user_manual/user_manual.pdf
 
-The technical documentation about the front end and back end can be found at: https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf
+The technical documentation about the front end and back end can be found at https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf
   
 
 ## License
