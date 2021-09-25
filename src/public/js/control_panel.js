@@ -44,6 +44,8 @@ function add_logout_listener() {
 add_logout_listener();
 
 
+
+
 /******************************************************************************************
 SWITCH MODE
 ******************************************************************************************/
@@ -59,8 +61,21 @@ document.getElementById("trigger_loading_animation").addEventListener("click", f
 
 
 
+/******************************************************************************************
+RESPONSIVE HEADER
+******************************************************************************************/
+
+// initially resize header if the page was loaded in a small window or on a mobile phone
+resize_header();
+
 window.addEventListener("resize", function() {
-    if (window.matchMedia("(min-width: 1000px)").matches) {
+    resize_header();
+})
+
+
+// responsive header functionallity
+function resize_header(){
+    if (window.matchMedia("(min-width: 930px)").matches) {
         document.getElementById("flex_title").innerHTML = 'VentPro';
         //document.getElementById("flex_user").innerHTML = 'big';
         document.getElementById("flex_menu").innerHTML = `
@@ -78,7 +93,7 @@ window.addEventListener("resize", function() {
             <a href="/" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
         
         `
-        if (window.matchMedia("(min-width: 620px)").matches) {
+        if (window.matchMedia("(min-width: 580px)").matches) {
             document.getElementById("flex_title").innerHTML = 'VentPro';
             //document.getElementById("flex_user").innerHTML = '';
         } else {
@@ -86,4 +101,4 @@ window.addEventListener("resize", function() {
             //document.getElementById("flex_user").innerHTML = '';
         }
     }
-})
+}
