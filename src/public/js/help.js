@@ -65,7 +65,7 @@ function resize_header(){
             <a href="/help" class="flex_menu_text_active" id="menu_help_text">Help</a><a href="/help" class="flex_menu_item" id="menu_help"><img src="/public/img/icon_help.svg" class="menu_icon_active" /></a>
             <a href="/control_panel" class="flex_menu_text_inactive" id="menu_control_panel_text">Control Panel</a><a href="/control_panel" class="flex_menu_item" id="menu_control_panel"><img src="/public/img/icon_control_panel.svg" class="menu_icon_inactive" /></a>
             <a href="/settings" class="flex_menu_text_inactive" id="menu_settings_text">Settings</a><a href="/settings" class="flex_menu_item" id="menu_settings"><img src="/public/img/icon_settings.svg" class="menu_icon_inactive" /></a>
-            <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">Logout</a><a href="/" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
+            <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">Logout</a><a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
         `;
         add_logout_listener();
     } else {
@@ -73,7 +73,7 @@ function resize_header(){
             <a href="/help" class="flex_menu_item" id="menu_help"><img src="/public/img/icon_help.svg" class="menu_icon_active" /></a>
             <a href="/control_panel" class="flex_menu_item" id="menu_control_panel"><img src="/public/img/icon_control_panel.svg" class="menu_icon_inactive" /></a>
             <a href="/settings" class="flex_menu_item" id="menu_settings"><img src="/public/img/icon_settings.svg" class="menu_icon_inactive" /></a>
-            <a href="/" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
+            <a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
         
         `
         if (window.matchMedia("(min-width: 580px)").matches) {
