@@ -50,13 +50,35 @@ add_logout_listener();
 SWITCH MODE
 ******************************************************************************************/
 
-// DEMONSTRATION ONLY
-document.getElementById("trigger_loading_animation").addEventListener("click", function() {
-    document.getElementById("overlay").style.display = "block";
-    setTimeout(function() {
-        document.getElementById("overlay").style.display = "none";
-    }, 2000);
+// checkbox: false = automatic mode, true = manual mode
+document.getElementById("mode_switch").addEventListener("click", function() {
+    if(!document.getElementById("mode_switch").checked) {                                                                   // AUTOMATIC MODE
+        console.log('automatic mode');
+        
+        // toggle overlay
+        document.getElementById('overlay_disabled_automatic').style.display = "none";                                       // hide overlay
+        document.getElementById('flex_control_automatic').style.opacity =  1;                                               // set flexbox opacity
+        document.getElementById('flex_control_automatic').style.webkitFilter = "blur(0px)";                                 // remove flexbox blur
+        
+        document.getElementById('overlay_disabled_manual').style.display = "block";                                         // hide overlay
+        document.getElementById('flex_control_manual').style.opacity =  0.5;                                                // set flexbox opacity
+        document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";                                    // remove flexbox blur
+    } else {                                                                                                                // MANUAL MODE
+        console.log('manual mode');
+        
+        // toggle overlay
+        document.getElementById('overlay_disabled_manual').style.display = "none";                                          // hide overlay
+        document.getElementById('flex_control_manual').style.opacity =  1;                                                  // set flexbox opacity
+        document.getElementById('flex_control_manual').style.webkitFilter = "blur(0px)";                                    // remove flexbox blur
+        
+        document.getElementById('overlay_disabled_automatic').style.display = "block";                                      // hide overlay
+        document.getElementById('flex_control_automatic').style.opacity =  0.5;                                             // set flexbox opacity
+        document.getElementById('flex_control_automatic').style.webkitFilter = "blur(1px)";                                 // remove flexbox blur
+    }
 });
+
+
+
 
 
 
@@ -102,3 +124,118 @@ function resize_header(){
         }
     }
 }
+
+
+
+
+
+
+
+/******************************************************************************************
+PLOTS
+******************************************************************************************/
+
+
+
+function display_example_plot_automatic() {
+    var ctx = document.getElementById('chart_automatic').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [0, 1, 2, 3, 4, 5],
+            datasets: [{
+                label: 'current pressure',
+                data: [12, 50, 110, 15, 22, 3],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1,
+                tension: 0.4
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    suggestedMin: 0,
+                    suggestedMax: 120,
+                    beginAtZero: true,
+                    ticks: {
+                        // append unit to scale
+                        callback: function(value, index, values) {
+                            return value + 'Pa';
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 2
+                }
+            }
+        }
+    });
+}
+
+function display_example_plot_manual() {
+    var ctx = document.getElementById('chart_manual').getContext('2d');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [0, 1, 2, 3, 4, 5],
+            datasets: [{
+                label: 'current fan speed',
+                data: [10, 30, 80, 75, 5, 30],
+                backgroundColor: [
+                    'rgba(99, 138, 255, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(99, 138, 255, 1)'
+                ],
+                borderWidth: 1,
+                tension: 0.4
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    beginAtZero: true,
+                    ticks: {
+                        // append unit to scale
+                        callback: function(value, index, values) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 2
+                }
+            }
+        }
+    });
+}
+
+display_example_plot_automatic();
+display_example_plot_manual();
+
+
+
+
+/******************************************************************************************
+SET TARGEt VALUES
+******************************************************************************************/
+
+document.getElementById("target_fan_speed").addEventListener('input', e => {
+    document.getElementById("label_target_fan_speed").innerHTML = document.getElementById("target_fan_speed").value + '%';
+});
+
+document.getElementById("target_pressure").addEventListener('input', e => {
+    document.getElementById("label_target_pressure").innerHTML = document.getElementById("target_pressure").value + 'Pa';
+});
+
