@@ -50,6 +50,16 @@ add_logout_listener();
 SWITCH MODE
 ******************************************************************************************/
 
+// INIT: DELETE AFTER FETCHING THE MODE IS IMPLEMENTED!!!
+document.getElementById('overlay_disabled_automatic').style.display = "none";                                               // hide overlay
+document.getElementById('flex_control_automatic').style.opacity =  1;                                                       // set flexbox opacity
+document.getElementById('flex_control_automatic').style.webkitFilter = "blur(0px)";                                         // remove flexbox blur
+document.getElementById('overlay_disabled_manual').style.display = "block";                                                 // hide overlay
+document.getElementById('flex_control_manual').style.opacity =  0.5;                                                        // set flexbox opacity
+document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";                                            // remove flexbox blur
+
+
+
 // checkbox: false = automatic mode, true = manual mode
 document.getElementById("mode_switch").addEventListener("click", function() {
     if(!document.getElementById("mode_switch").checked) {                                                                   // AUTOMATIC MODE
@@ -104,7 +114,7 @@ function resize_header(){
             <a href="/help" class="flex_menu_text_inactive" id="menu_help_text">Help</a><a href="/help" class="flex_menu_item" id="menu_help"><img src="/public/img/icon_help.svg" class="menu_icon_inactive" /></a>
             <a href="/control_panel" class="flex_menu_text_active" id="menu_control_panel_text">Control Panel</a><a href="/control_panel" class="flex_menu_item" id="menu_control_panel"><img src="/public/img/icon_control_panel.svg" class="menu_icon_active" /></a>
             <a href="/settings" class="flex_menu_text_inactive" id="menu_settings_text">Settings</a><a href="/settings" class="flex_menu_item" id="menu_settings"><img src="/public/img/icon_settings.svg" class="menu_icon_inactive" /></a>
-            <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">Logout</a><a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
+            <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">Log out</a><a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
         `;
         add_logout_listener();
     } else {
@@ -147,10 +157,10 @@ function display_example_plot_automatic() {
                 label: 'current pressure',
                 data: [12, 50, 110, 15, 22, 3],
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)'
+                    'rgba(204, 80, 107, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(255, 99, 132, 1)'
+                    'rgba(204, 80, 107, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4
@@ -189,10 +199,10 @@ function display_example_plot_manual() {
                 label: 'current fan speed',
                 data: [10, 30, 80, 75, 5, 30],
                 backgroundColor: [
-                    'rgba(99, 138, 255, 0.2)'
+                    'rgba(64, 153, 60, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(99, 138, 255, 1)'
+                    'rgba(64, 153, 60, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4

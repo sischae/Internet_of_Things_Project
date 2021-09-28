@@ -12,20 +12,29 @@
         <div class="flex_header">
             <div class="flex_menu">
                 <a href="/" ><img src="/public/img/ventilator_white.png" class="rotate" /></a>
-                <a href="/" class="flex_title">VentPro</a>
+                <a href="/" class="flex_title" id="flex_title">VentPro</a>
             </div>
             
-            <div class="flex_menu">
-                <a href="/" class="flex_menu_item">Log in</a>
+            <div class="flex_menu" id="flex_menu">
+                <a href="/" class="flex_menu_text_inactive" id="menu_logout_text">
+                    Log in
+                </a>
+                <a href="/" id="logout" class="flex_menu_item" >
+                    <img src="/public/img/icon_login.svg" class="menu_icon_inactive" />
+                </a>
             </div>
         </div>
         
         
         
         
+ 
+        <div style="text-align: center; margin-top: 50px;">
+            <h1>Log in to get started</h1>
+        </div>
         
         <div style="text-align: center; margin-top: 50px;">
-            logout page: work in progress
+            <img src="/public/img/logout_preview.png" style="width: 70%; filter: opacity(90%);"></img>
         </div>
         
         <script async src="./public/js/logout.js"></script>
