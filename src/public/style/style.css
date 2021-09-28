@@ -287,6 +287,22 @@ ADD NEW USER
     border-radius: 10px;
     
     box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    
+    position: relative;
+}
+
+#acc_add_user_blur {
+    /* disable form by default: bluring and reducing opacity to indicate unavailable function */
+    opacity: 0.5;
+    filter: blur(1px);
+}
+
+/* overlay make input fields and button inaccessible to the user */
+.overlay_disabled {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0);
+    z-index: 2;
 }
 
 
