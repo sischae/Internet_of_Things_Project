@@ -60,10 +60,18 @@ app.get('/activity', async (req, res, next) => {
     auth_user(req, res, next, 'activity');
 });
 
+
+// return list of log in activity
+app.get('/permission', async (req, res, next) => {
+    auth_user(req, res, next, 'permission');
+});
+
+
 // add a new user if the user is authorized to
 app.post('/add_user', async (req, res, next) => {
     auth_user(req, res, next, 'add_user');
 });
+
 
 // change the password of the current user
 app.post('/change_password', async (req, res, next) => {
@@ -340,6 +348,10 @@ function auth_user(req, res, next, redirect) {
                         switch(redirect) {
                                 case 'activity':
                                     get_activity(req, res, next, username, role);
+                                    break;
+                                
+                                case 'permission':
+                                    res.status(200).send(role);
                                     break;
                                 
                                 case 'req_logout':

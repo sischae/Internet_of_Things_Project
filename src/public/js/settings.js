@@ -252,6 +252,27 @@ document.getElementById('flex_acc_add_user').addEventListener('submit', e => {
 
 
 
+// initially fetch the users permission to enable/disable the "add user" form
+function getPermission() {
+    fetch('/permission', {                                                                              // send get request
+        method: 'get',
+    }).then(function(response) {
+        return response.text().then(function(text) {
+            
+            // toggle "add user form" depending on the users permission
+            if(text == 'default') {
+                document.getElementById('acc_add_user_info').style.color = 'white';                     // hide blured info
+            } else if(text == 'admin') {
+                document.getElementById('overlay_disabled').style.display = "none";                     // hide overlay
+                document.getElementById('acc_add_user_blur').style.opacity =  1;                        // set flexbox opacity
+                document.getElementById('acc_add_user_blur').style.webkitFilter = "blur(0px)";          // remove flexbox blur
+                document.getElementById('acc_add_user_info').style.color = '#262626';                   // show info
+            }
+        });
+    });
+}
+getPermission();
+
 
 /******************************************************************************************
 RESPONSIVE HEADER
