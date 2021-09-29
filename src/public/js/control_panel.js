@@ -409,8 +409,10 @@ ws_client.onopen = () => {
                 let tim = new Date(Date.now());
                 
                 // remove the first element of both arrays
-                pressure_y.shift();
-                pressure_x.shift();
+                if(pressure_y.length > 30) {
+                    pressure_y.shift();
+                    pressure_x.shift();
+                }
                 
                 pressure_x.push(tim.formatHHMMSS());
                 pressure_y.push(parseInt(message.data));
@@ -449,8 +451,10 @@ ws_client.onopen = () => {
                 let tim = new Date(Date.now());
                 
                 // remove the first element of both arrays
-                fan_speed_y.shift();
-                fan_speed_x.shift();
+                if(fan_speed_y.length > 30) {
+                    fan_speed_y.shift();
+                    fan_speed_x.shift();
+                }
                 
                 fan_speed_x.push(tim.formatHHMMSS());
                 fan_speed_y.push(parseInt(message.data));
