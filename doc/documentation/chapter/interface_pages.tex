@@ -1,14 +1,19 @@
 \chapter{Interface pages}
 \label{ch:interface_pages}
+[Introduction to the pages section]
 
 
-\section{Landing page}
-\label{sec:landing_page}
+\section{Help page}
+\label{sec:help}
+The help page provides a quick guide on how to use the interface.
 
 
 
 \section{Control panel}
 \label{sec:control_panel}
+The control panel allows the user two switch between automatic and manual mode. In automatic mode, the user can set a target pressure while the target fan speed can be set in manual mode only. Depending on the active mode, the input elements will be activated/deactivated.  Also, if a mode is inactive, its' panel will be displayed with reduced opacity and a blur filter. These effects will be removed on activation.
+
+Besides the input elements to set target values, the control panel displays a plot of current sensor data both for current pressure and fan speed (chapter \ref{sec:display_control_panel}). The panel also displays three buttons to display data of different time intervals. Clicking on a button will trigger an event listener. The event listener will request a set of data from the server, change some parameters of the plot depending on how the data should be displayed, and setting up different ways of handling new incoming data.
 
 
 
