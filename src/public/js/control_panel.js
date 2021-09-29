@@ -63,8 +63,6 @@ document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";
 // checkbox: false = automatic mode, true = manual mode
 document.getElementById("mode_switch").addEventListener("click", function() {
     if(!document.getElementById("mode_switch").checked) {                                                                   // AUTOMATIC MODE
-        console.log('automatic mode');
-        
         // toggle overlay
         document.getElementById('overlay_disabled_automatic').style.display = "none";                                       // hide overlay
         document.getElementById('flex_control_automatic').style.opacity =  1;                                               // set flexbox opacity
@@ -74,8 +72,6 @@ document.getElementById("mode_switch").addEventListener("click", function() {
         document.getElementById('flex_control_manual').style.opacity =  0.5;                                                // set flexbox opacity
         document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";                                    // remove flexbox blur
     } else {                                                                                                                // MANUAL MODE
-        console.log('manual mode');
-        
         // toggle overlay
         document.getElementById('overlay_disabled_manual').style.display = "none";                                          // hide overlay
         document.getElementById('flex_control_manual').style.opacity =  1;                                                  // set flexbox opacity
@@ -146,16 +142,43 @@ PLOTS
 ******************************************************************************************/
 
 
+// define prototypes for date formats
 
-function display_example_plot_automatic() {
+Date.prototype.formatDDMMYYYY = function(){
+    return this.getDate().toLocaleString('en-US', {minimumIntegerDigits: 2}) + "." +  (this.getMonth() + 1).toLocaleString('en-US', {minimumIntegerDigits: 2}) + "." +  this.getFullYear();
+}
+
+Date.prototype.formatDDMM = function(){
+    return this.getDate().toLocaleString('en-US', {minimumIntegerDigits: 2}) + "." +  (this.getMonth() + 1).toLocaleString('en-US', {minimumIntegerDigits: 2});
+}
+
+Date.prototype.formatHHMMSS = function(){
+    return this.getHours().toLocaleString('en-US', {minimumIntegerDigits: 2}) + ":" +  this.getMinutes().toLocaleString('en-US', {minimumIntegerDigits: 2}) + ":" +  this.getSeconds().toLocaleString('en-US', {minimumIntegerDigits: 2});
+}
+
+
+
+
+var pressure_x = [];
+var pressure_y = [];
+var fan_speed_x = [];
+var fan_speed_y = [];
+
+var plot_pressure;
+var plot_fan_speed;
+
+var plot_pressure_interval = 'all';
+var plot_fan_speed_interval = 'all';
+
+function display_plot_pressure() {
     var ctx = document.getElementById('chart_automatic').getContext('2d');
-    var myChart = new Chart(ctx, {
+    plot_pressure = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [0, 1, 2, 3, 4, 5],
+            labels: pressure_x,
             datasets: [{
                 label: 'current pressure',
-                data: [12, 50, 110, 15, 22, 3],
+                data: pressure_y,
                 backgroundColor: [
                     'rgba(204, 80, 107, 0.2)'
                 ],
@@ -189,15 +212,15 @@ function display_example_plot_automatic() {
     });
 }
 
-function display_example_plot_manual() {
+function display_plot_fan_speed() {
     var ctx = document.getElementById('chart_manual').getContext('2d');
-    var myChart = new Chart(ctx, {
+    plot_fan_speed = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [0, 1, 2, 3, 4, 5],
+            labels: fan_speed_x,
             datasets: [{
                 label: 'current fan speed',
-                data: [10, 30, 80, 75, 5, 30],
+                data: fan_speed_y,
                 backgroundColor: [
                     'rgba(64, 153, 60, 0.2)'
                 ],
@@ -231,14 +254,106 @@ function display_example_plot_manual() {
     });
 }
 
-display_example_plot_automatic();
-display_example_plot_manual();
+
+
+function init_plot_pressure(interval) {
+    fetch('/data_cp?data=pressure&interval=' + interval, {
+        method: 'get',
+    }).then(response => response.json())
+    .then(data => {
+        let buff_xs = [];
+        let buff_ys = [];
+        
+        for (let i in data) {
+            let time = new Date(data[i].timestamp);                                                                         // format time
+            
+            if(interval == 'all') {
+                buff_xs.push(time.formatDDMM());
+            } else {
+                buff_xs.push(time.formatHHMMSS());
+            }
+            
+            buff_ys.push(data[i].pressure);
+        }
+        
+        pressure_x = buff_xs;
+        pressure_y = buff_ys;
+        
+        display_plot_pressure();
+    });
+}
+
+function init_plot_fan_speed(interval) {
+    fetch('/data_cp?data=fan_speed&interval=' + interval, {
+        method: 'get',
+    }).then(response => response.json())
+    .then(data => {
+        let buff_xs = [];
+        let buff_ys = [];
+        
+        for (let i in data) {
+            let time = new Date(data[i].timestamp);                                                                         // format time
+            
+            if(interval == 'all') {
+                buff_xs.push(time.formatDDMM());
+            } else {
+                buff_xs.push(time.formatHHMMSS());
+            }
+            
+            buff_ys.push(data[i].fan_speed);
+        }
+        
+        fan_speed_x = buff_xs;
+        fan_speed_y = buff_ys;
+        
+        display_plot_fan_speed();
+    });
+}
+
+init_plot_pressure('all');
+init_plot_fan_speed('all');
+
+
+// BUTTONS
+
+document.getElementById("btn_pressure_all").addEventListener("click", function() {
+    plot_pressure.destroy();
+    plot_pressure_interval = 'all';
+    init_plot_pressure('all');
+});
+document.getElementById("btn_pressure_day").addEventListener("click", function() {
+    plot_pressure.destroy();
+    plot_pressure_interval = 'day';
+    init_plot_pressure('day');
+});
+document.getElementById("btn_pressure_minute").addEventListener("click", function() {
+    plot_pressure.destroy();
+    plot_pressure_interval = 'minute';
+    init_plot_pressure('minute');
+});
+
+document.getElementById("btn_fan_speed_all").addEventListener("click", function() {
+    plot_fan_speed.destroy();
+    plot_fan_speed_interval = 'all';
+    init_plot_fan_speed('all');
+});
+document.getElementById("btn_fan_speed_day").addEventListener("click", function() {
+    plot_fan_speed.destroy();
+    plot_fan_speed_interval = 'day';
+    init_plot_fan_speed('day');
+});
+document.getElementById("btn_fan_speed_minute").addEventListener("click", function() {
+    plot_fan_speed.destroy();
+    plot_fan_speed_interval = 'minute';
+    init_plot_fan_speed('minute');
+});
+
 
 
 
 
 /******************************************************************************************
-SET TARGEt VALUES
+SET TARGET VALUES
 ******************************************************************************************/
 
 document.getElementById("target_fan_speed").addEventListener('input', e => {
@@ -248,4 +363,109 @@ document.getElementById("target_fan_speed").addEventListener('input', e => {
 document.getElementById("target_pressure").addEventListener('input', e => {
     document.getElementById("label_target_pressure").innerHTML = document.getElementById("target_pressure").value + 'Pa';
 });
+
+
+
+
+
+/******************************************************************************************
+WEBSOCKET
+******************************************************************************************/
+
+// setup connection to the WebsocketServer
+const ws_client = new WebSocket('ws://localhost:8000');
+
+ws_client.onopen = () => {
+    //console.log('[WebSocket] Connected to the server');
+    
+    ws_client.send('ping');
+    
+    ws_client.onmessage = (message) => {
+        //console.log('[WebSocket] Received message: ' + message.data);
+        
+        // update plot_pressure
+        if(Number.isInteger(parseInt(message.data))) {
+            if(plot_pressure_interval == 'all') {
+                let tim = new Date(Date.now());
+                pressure_x.push(tim.formatDDMM());
+                pressure_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_pressure.data.datasets.forEach(dataset => {
+                    dataset.data = pressure_y;
+                  });
+                plot_pressure.update();
+            } else if (plot_pressure_interval == 'day') {
+                let tim = new Date(Date.now());
+                pressure_x.push(tim.formatHHMMSS());
+                pressure_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_pressure.data.datasets.forEach(dataset => {
+                    dataset.data = pressure_y;
+                  });
+                plot_pressure.update();
+            } else if (plot_pressure_interval == 'minute') {
+                let tim = new Date(Date.now());
+                
+                // remove the first element of both arrays
+                pressure_y.shift();
+                pressure_x.shift();
+                
+                pressure_x.push(tim.formatHHMMSS());
+                pressure_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_pressure.data.datasets.forEach(dataset => {
+                    dataset.data = pressure_y;
+                  });
+                plot_pressure.update();
+            }
+        }
+        
+        // update plot_fan_speed
+        if(Number.isInteger(parseInt(message.data))) {
+            if(plot_fan_speed_interval == 'all') {
+                let tim = new Date(Date.now());
+                fan_speed_x.push(tim.formatDDMM());
+                fan_speed_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_fan_speed.data.datasets.forEach(dataset => {
+                    dataset.data = fan_speed_y;
+                  });
+                plot_fan_speed.update();
+            } else if (plot_fan_speed_interval == 'day') {
+                let tim = new Date(Date.now());
+                fan_speed_x.push(tim.formatHHMMSS());
+                fan_speed_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_fan_speed.data.datasets.forEach(dataset => {
+                    dataset.data = fan_speed_y;
+                  });
+                plot_fan_speed.update();
+            } else if (plot_fan_speed_interval == 'minute') {
+                let tim = new Date(Date.now());
+                
+                // remove the first element of both arrays
+                fan_speed_y.shift();
+                fan_speed_x.shift();
+                
+                fan_speed_x.push(tim.formatHHMMSS());
+                fan_speed_y.push(parseInt(message.data));
+
+                //plot_pressure.labels = pressure_x;
+                plot_fan_speed.data.datasets.forEach(dataset => {
+                    dataset.data = fan_speed_y;
+                  });
+                plot_fan_speed.update();
+            }
+        }
+    };
+};
+
+
+
+
 

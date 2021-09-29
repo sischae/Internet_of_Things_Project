@@ -15,7 +15,8 @@ The following packages are necessary to run the code. Install packages using "np
   - serialport
   - mongodb
   - sqlite3
-  
+  - websocket
+  - ws  
   
 ## Usage
 

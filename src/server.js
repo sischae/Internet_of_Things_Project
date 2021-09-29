@@ -9,6 +9,8 @@ const app = express();
 const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
 
+const mqtt = require('mqtt');
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
@@ -19,6 +21,84 @@ app.set('view engine', 'ejs');
 const path_db = __dirname + '/data/data.db';
 
 
+
+
+/******************************************************************************************
+MQTT SETUP
+******************************************************************************************/
+
+// configuration
+const mqtt_ip = "mqtt://localhost";
+const mqtt_port = "1883";
+const mqtt_topic_pub = "";
+const mqtt_topic_sub = "sim/sensors/tmp";
+
+
+// setup connection
+var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
+mqtt_client.on("connect",function(){
+    console.log("Connected to mqtt broker")
+});
+
+mqtt_client.subscribe(mqtt_topic_sub);                                                                      // subscribe to the MQTT topic using the provided client
+mqtt_client.on('message',function(topic, message, packet) {
+    let msg = JSON.parse(message);                                                                          // parse received data
+    mqtt_msg_to_db(msg.samplenr, msg.timestamp, msg.temperature);                                           // add received data to the database
+});
+
+
+
+
+/******************************************************************************************
+WEBSOCKET SETUP
+******************************************************************************************/
+
+// setup websocket server
+var webSocketServer = new (require('ws')).Server({port: (process.env.PORT || 8000)}), webSockets = {};
+
+// handle incoming connections from clients
+webSocketServer.on('connection', (ws, req) => {
+    // identify client (important for closing the connection later on)
+    const key = req.headers['sec-websocket-key'];
+    ws.upgradeReq = req;
+    var userID = parseInt(ws.upgradeReq.url.substr(1), 10);
+    webSockets[userID] = ws;
+
+
+    // return confirmation on incoming messages
+    ws.on('message', function incoming(data) {
+        if(data == 'ping') {
+            ws.send('pong');
+        } else {
+            ws.send('OK');
+        }
+    });
+
+    
+    // handle disconnections
+    ws.on('close', function () {
+      delete webSockets[userID];
+    });
+    
+    
+    // subscribe to MQTT topic and forward data
+    mqtt_client.subscribe(mqtt_topic_sub);
+    mqtt_client.on('message',function(topic, message, packet) {
+        let msg = JSON.parse(message);                                                                          // parse received data
+        ws.send(msg.temperature);                                                                    // forward new data to the client
+    });
+});
+
+
+
+
+/******************************************************************************************
+ROUTES
+******************************************************************************************/
+
+/*****************************************
+requested web pages
+*/
 
 // return landing page
 app.get('/', async (req, res, next) => {
@@ -31,7 +111,7 @@ app.get('/settings', async (req, res, next) => {
     auth_user(req, res, next, 'settings');
 });
 
-// return settings page
+// return control panel
 app.get('/control_panel', async (req, res, next) => {
     auth_user(req, res, next, 'control_panel');
 });
@@ -48,6 +128,11 @@ app.get('/logout', async (req, res) => {
     res.render('logout');
 });
 
+
+
+/*****************************************
+requested actions
+*/
 
 // log out
 app.get('/req_logout', async (req, res, next) => {
@@ -73,10 +158,45 @@ app.post('/add_user', async (req, res, next) => {
 });
 
 
-// change the password of the current user
+// change the password if the current user
 app.post('/change_password', async (req, res, next) => {
     auth_user(req, res, next, 'change_password');
 });
+
+
+// return data to the control panel to be displayed in a plot
+app.get('/data_cp', async (req, res, next) => {
+    auth_user(req, res, next, req.query.data, req.query.interval);
+});
+
+
+
+
+/******************************************************************************************
+MQTT DATA LOGGING AND FORWARDING
+******************************************************************************************/
+
+// add data to the database after receiving a message via MQTT
+function mqtt_msg_to_db(samplenr, timestamp, temperature) {
+    
+    // PROTOTYPE FUNCTION WRITING EXAMPLE DATA RECEIVED IN A WRING FORMAT
+    let db = new sqlite3.Database(path_db);                                                         // connect to database
+    
+    db.run('INSERT INTO pressure(timestamp, pressure) VALUES(' + Date.now() + ', ' + temperature * 2 + ')', function(err) {
+        if (err) {                                                                                  // catch errors
+            return console.log(err.message);                                                        // log
+        }
+    });
+    
+    db.run('INSERT INTO fan_speed(timestamp, fan_speed) VALUES(' + Date.now() + ', ' + temperature + ')', function(err) {
+        if (err) {                                                                                  // catch errors
+            return console.log(err.message);                                                        // log
+        }
+    });
+
+    // close the database connection
+    db.close();
+}
 
 
 
@@ -91,7 +211,7 @@ function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                // connect to database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                                   // connect to database
         if (err) {                                                                                              // catch errors
             return console.error(err.message);
         }
@@ -149,7 +269,7 @@ async function add_user(req, res, next, username, hash, req_role) {
     if(req_role == 'admin') {
         
         // open database
-        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                      // connect to database
+        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
             if (err) {                                                                                          // catch errors
                 return console.error(err.message);
             }
@@ -180,7 +300,7 @@ async function add_user(req, res, next, username, hash, req_role) {
             
             if(exists == false) {
                 // reopen database to add a new user
-                db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
+                db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                     if (err) {                                                                                  // catch errors
                         return console.error(err.message);
                     }
@@ -225,24 +345,24 @@ CHANGE PASSWORD
 
 function change_password(req, res, next, username, hash) {
     // reopen database to add a new user
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                  // connect to database
-        if (err) {                                                                                  // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                                   // connect to database
+        if (err) {                                                                                              // catch errors
             return console.error(err.message);
         }
     });
     
     // change password
     db.run('UPDATE users SET hash = "' + hash + '" WHERE username = "' + username + '"', function(err) {
-        if (err) {                                                                                  // catch errors
-            return console.log(err.message);                                                        // log
+        if (err) {                                                                                              // catch errors
+            return console.log(err.message);                                                                    // log
         }
     });
     
     // close the database connection
-    db.close((err) => {                                                                             // close database connection
-        if (err) {                                                                                  // catch errors
-            res.status(500).send('Internal Error');                                                 // send error information to client
-            return console.error(err.message);                                                      // log
+    db.close((err) => {                                                                                         // close database connection
+        if (err) {                                                                                              // catch errors
+            res.status(500).send('Internal Error');                                                             // send error information to client
+            return console.error(err.message);                                                                  // log
         }
         
         res.status(200).send('OK');
@@ -254,11 +374,113 @@ function change_password(req, res, next, username, hash) {
 
 
 /******************************************************************************************
+RETURN DATA FOR CONTROL PANEL
+******************************************************************************************/
+
+function get_data_cp(res, datatype, interval) {
+    let data = JSON.parse('[]');
+    let db;
+    
+    // get timestamp of oldest requested entry
+    let time_bound_old = 0;
+    
+    switch(interval) {
+        case 'all':
+            time_bound_old = 0;
+            break;
+        
+        case 'day':
+            time_bound_old = Date.now() - (1000 * 60 * 60 * 24);
+            break;
+            
+        case 'minute':
+            time_bound_old = Date.now() - (1000 * 60);
+            break;
+        default:
+            res.status(404).send('Invalid time interval requested.')
+            break;
+    }
+    
+    
+    // get and return data
+    switch(datatype) {
+        case 'pressure':
+            // open database
+            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                   // connect to database
+                if (err) {                                                                                  // catch errors
+                    return console.error(err.message);
+                }
+            });
+
+            // fetch all cars
+            db.serialize(() => {
+                db.each(`SELECT timestamp as timestamp, pressure as pressure FROM pressure WHERE timestamp > ` + time_bound_old, (err, row) => {
+                    if (err) {                                                                              // catch errors
+                        console.error(err.message);                                                         // log
+                    }
+                    
+                    data.push({"timestamp":row.timestamp, "pressure":row.pressure});
+                });
+            });
+
+            // close the database connection
+            db.close((err) => {                                                                             // close database connection
+                if (err) {                                                                                  // catch errors
+                    res.status(500).send('Internal Error');                                                 // send error information to client
+                    return console.error(err.message);                                                      // log
+                }
+                
+                res.status(200).json(data);
+            });
+            break;
+            
+        case 'fan_speed':
+            // open database
+            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                   // connect to database
+                if (err) {                                                                                  // catch errors
+                    return console.error(err.message);
+                }
+            });
+
+            // fetch all cars
+            db.serialize(() => {
+                db.each(`SELECT timestamp as timestamp, fan_speed as fan_speed FROM fan_speed WHERE timestamp > ` + time_bound_old, (err, row) => {
+                    if (err) {                                                                              // catch errors
+                        console.error(err.message);                                                         // log
+                    }
+                    
+                    data.push({"timestamp":row.timestamp, "fan_speed":row.fan_speed});
+                });
+            });
+
+            // close the database connection
+            db.close((err) => {                                                                             // close database connection
+                if (err) {                                                                                  // catch errors
+                    res.status(500).send('Internal Error');                                                 // send error information to client
+                    return console.error(err.message);                                                      // log
+                }
+                
+                res.status(200).json(data);
+            });
+            break;
+            
+        default:
+            res.status(404).send('Requested recource not found.')
+            break;
+    }
+}
+
+
+
+
+
+
+/******************************************************************************************
 AUTHENTICATE USER
 ******************************************************************************************/
 
 // authenticate user an redirect to correct page
-function auth_user(req, res, next, redirect) {
+function auth_user(req, res, next, redirect, arg_dyn = '') {                                                     // arg_dyn may get used, but is not required
     var authheader = req.headers.authorization;
     res.setHeader('WWW-Authenticate', 'Basic');
  
@@ -375,9 +597,6 @@ function auth_user(req, res, next, redirect) {
                                         res.status(200).send('OK');
                                         next();
                                     });
-                                    
-                                
-                                    
                                     break;
                                 
                                 case 'add_user':
@@ -398,6 +617,14 @@ function auth_user(req, res, next, redirect) {
                                         let hash = derivedKey.toString('hex');
                                         change_password(req, res, next, username, hash);                        // add a new user with the given username and the created hash
                                     });
+                                    break;
+                                
+                                case 'pressure':
+                                    get_data_cp(res, 'pressure', arg_dyn);
+                                    break;
+                                
+                                case 'fan_speed':
+                                    get_data_cp(res, 'fan_speed', arg_dyn);
                                     break;
                                 
                                 default:

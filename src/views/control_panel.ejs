@@ -75,12 +75,14 @@
                     <div id="overlay_disabled_automatic" class="overlay_disabled_control_panel">
                     </div>
                     
-                    <canvas id="chart_automatic" height="200"></canvas>
+                    <div height="200">
+                        <canvas id="chart_automatic"></canvas>
+                    </div>
                     
                     <div class="flex_control_panel" id="chart_scale_automatic" style="justify-content: flex-end;">
-                        <button>all</button>
-                        <button>today</button>
-                        <button>last minute</button>
+                        <button id="btn_pressure_all">all</button>
+                        <button id="btn_pressure_day">today</button>
+                        <button id="btn_pressure_minute">last minute</button>
                     </div>
                     
                     <div class="flex_control_panel_col" id="target_value_automatic" style="justify-content: center;">
@@ -106,12 +108,14 @@
                     <div id="overlay_disabled_manual" class="overlay_disabled_control_panel">
                     </div>
                     
-                    <canvas id="chart_manual" height="200"></canvas>
+                    <div height="200">
+                        <canvas id="chart_manual"></canvas>
+                    </div>
                     
                     <div class="flex_control_panel" id="chart_scale_manual" style="justify-content: flex-end;">
-                        <button>all</button>
-                        <button>today</button>
-                        <button>last minute</button>
+                        <button id="btn_fan_speed_all">all</button>
+                        <button id="btn_fan_speed_day">today</button>
+                        <button id="btn_fan_speed_minute">last minute</button>
                     </div>
                     
                     <div class="flex_control_panel_col" id="target_value_manual" style="justify-content: center;">
