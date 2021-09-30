@@ -37,10 +37,12 @@ const mqtt_topic_sub = "sim/sensors/tmp";
 // setup connection
 var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
 mqtt_client.on("connect",function(){
-    console.log("Connected to mqtt broker");
+    // connected to MQTT broker
 });
 
 mqtt_client.subscribe(mqtt_topic_sub);                                                                      // subscribe to the MQTT topic using the provided client
+console.log('Connected to MQTT broker. Subscribing to ' + mqtt_topic_sub);
+
 mqtt_client.on('message',function(topic, message, packet) {
     let msg = JSON.parse(message);                                                                          // parse received data
     mqtt_msg_to_db(msg.samplenr, msg.timestamp, msg.temperature);                                           // add received data to the database
@@ -55,6 +57,7 @@ WEBSOCKET SETUP
 
 // setup websocket server
 var webSocketServer = new (require('ws')).Server({port: (process.env.PORT || 8000)}), webSockets = {};
+console.log('WebSocket server running. Listening on port 8000...');
 
 // handle incoming connections from clients
 webSocketServer.on('connection', (ws, req) => {
@@ -85,7 +88,7 @@ webSocketServer.on('connection', (ws, req) => {
     mqtt_client.subscribe(mqtt_topic_sub);
     mqtt_client.on('message',function(topic, message, packet) {
         let msg = JSON.parse(message);                                                                          // parse received data
-        ws.send(msg.temperature);                                                                    // forward new data to the client
+        ws.send(msg.temperature);                                                                               // forward new data to the client
     });
 });
 
@@ -179,10 +182,14 @@ app.post('/set_mode', async (req, res, next) => {
     auth_user(req, res, next, 'set_mode', req.query.mode);
 });
 
-
 // return data to the control panel to be displayed in a plot
 app.post('/cmd', async (req, res, next) => {
     auth_user(req, res, next, req.query.cmd, req.query.value);
+});
+
+// get target values for pressure and fan speed
+app.get('/get_target_values', async (req, res, next) => {
+    auth_user(req, res, next, 'get_target_values');
 });
 
 
@@ -195,17 +202,17 @@ MQTT DATA LOGGING AND FORWARDING
 function mqtt_msg_to_db(samplenr, timestamp, temperature) {
     
     // PROTOTYPE FUNCTION WRITING EXAMPLE DATA RECEIVED IN A WRING FORMAT
-    let db = new sqlite3.Database(path_db);                                                         // connect to database
+    let db = new sqlite3.Database(path_db);                                                                     // connect to database
     
     db.run('INSERT INTO pressure(timestamp, pressure) VALUES(' + Date.now() + ', ' + temperature * 2 + ')', function(err) {
-        if (err) {                                                                                  // catch errors
-            return console.log(err.message);                                                        // log
+        if (err) {                                                                                              // catch errors
+            return console.log(err.message);                                                                    // log
         }
     });
     
     db.run('INSERT INTO fan_speed(timestamp, fan_speed) VALUES(' + Date.now() + ', ' + temperature + ')', function(err) {
-        if (err) {                                                                                  // catch errors
-            return console.log(err.message);                                                        // log
+        if (err) {                                                                                              // catch errors
+            return console.log(err.message);                                                                    // log
         }
     });
 
@@ -421,7 +428,7 @@ function get_data_cp(res, datatype, interval) {
     switch(datatype) {
         case 'pressure':
             // open database
-            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                   // connect to database
+            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                 if (err) {                                                                                  // catch errors
                     return console.error(err.message);
                 }
@@ -451,7 +458,7 @@ function get_data_cp(res, datatype, interval) {
             
         case 'fan_speed':
             // open database
-            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                   // connect to database
+            db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                 if (err) {                                                                                  // catch errors
                     return console.error(err.message);
                 }
@@ -492,14 +499,19 @@ function get_data_cp(res, datatype, interval) {
 SEND COMMAND VIA MQTT
 ******************************************************************************************/
 
+var target_pressure = 0;
+var target_fan_speed = 0;
+
 function send_target_pressure(req, res, next, value) {
     //console.log('Sending target pressure via MQTT: ' + value + 'Pa');
+    target_pressure = value;
     mqtt_client.publish(mqtt_topic_pub, value);
     res.status(200).send('OK');
 }
 
 function send_target_fan_speed(req, res, next, value) {
     //console.log('Sending target fan speed via MQTT: ' + value + '%');
+    target_fan_speed = value;
     mqtt_client.publish(mqtt_topic_pub, value);
     res.status(200).send('OK');
 }
@@ -531,6 +543,18 @@ function set_mode(req, res, next, mode) {
     } else {
         res.status(400).send('Bad request')
     }
+}
+
+
+
+
+/******************************************************************************************
+RETURN TARGET VALUES FOR PRESSURE AND FAN SPEED
+******************************************************************************************/
+
+function get_target_values(req, res, next) {
+    let vals = JSON.parse('{"target_pressure":' + target_pressure + ', "target_fan_speed":' + target_fan_speed + '}');
+    res.status(200).json(vals);
 }
 
 
@@ -701,6 +725,10 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
                                 
                                 case 'set_mode':
                                     set_mode(req, res, next, arg_dyn);
+                                    break;
+                                
+                                case 'get_target_values':
+                                    get_target_values(req, res, next);
                                     break;
                                 
                                 default:
