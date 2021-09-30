@@ -124,6 +124,12 @@ function set_mode(mode) {
     }).then(res => {
         if(res.status == 200) {
             disp_mode(mode);
+        } else {
+            if(document.getElementById("mode_switch").checked) {
+                document.getElementById("mode_switch").checked = false;
+            } else {
+                document.getElementById("mode_switch").checked = true;
+            }
         }
     });
 }
