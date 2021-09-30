@@ -414,6 +414,7 @@ input_fan_speed.addEventListener('change', e => {
     send_cmd('set_fan_speed', input_fan_speed.value);
 });
 
+
 function send_cmd(cmd, value) {
     fetch('/cmd?cmd=' + cmd + '&value=' + value, {
         method: 'post',
@@ -422,6 +423,19 @@ function send_cmd(cmd, value) {
     });
 }
 
+
+function get_target_values() {
+    fetch('/get_target_values', {
+        method: 'get',
+    }).then(response => response.json())
+    .then(data => {
+        document.getElementById("label_target_pressure").innerHTML = data.target_pressure + 'Pa';
+        document.getElementById("label_target_fan_speed").innerHTML = data.target_fan_speed + '%';
+        input_pressure.value = data.target_pressure;
+        input_fan_speed.value = data.target_fan_speed;
+    });
+}
+get_target_values();
 
 
 /******************************************************************************************
@@ -524,6 +538,8 @@ ws_client.onopen = () => {
         }
     };
 };
+
+
 
 
 
