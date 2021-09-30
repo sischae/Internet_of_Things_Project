@@ -50,6 +50,8 @@ add_logout_listener();
 SWITCH MODE
 ******************************************************************************************/
 
+var cur_mode = 0;
+
 // INIT: DELETE AFTER FETCHING THE MODE IS IMPLEMENTED!!!
 document.getElementById('overlay_disabled_automatic').style.display = "none";                                               // hide overlay
 document.getElementById('flex_control_automatic').style.opacity =  1;                                                       // set flexbox opacity
@@ -62,7 +64,19 @@ document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";
 
 // checkbox: false = automatic mode, true = manual mode
 document.getElementById("mode_switch").addEventListener("click", function() {
-    if(!document.getElementById("mode_switch").checked) {                                                                   // AUTOMATIC MODE
+    if(!document.getElementById("mode_switch").checked) {
+        set_mode(0);                                                                                                        // AUTOMATIC MODE
+    } else {
+        set_mode(1);                                                                                                        // MANUAL MODE
+    }
+});
+
+
+// enable one and disable the other control panel
+function disp_mode(mode) {
+    if(mode == 0) {                                                                                                         // AUTOMATIC MODE
+        document.getElementById("mode_switch").checked = false;
+        
         // toggle overlay
         document.getElementById('overlay_disabled_automatic').style.display = "none";                                       // hide overlay
         document.getElementById('flex_control_automatic').style.opacity =  1;                                               // set flexbox opacity
@@ -72,6 +86,8 @@ document.getElementById("mode_switch").addEventListener("click", function() {
         document.getElementById('flex_control_manual').style.opacity =  0.5;                                                // set flexbox opacity
         document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";                                    // remove flexbox blur
     } else {                                                                                                                // MANUAL MODE
+        document.getElementById("mode_switch").checked = true;
+        
         // toggle overlay
         document.getElementById('overlay_disabled_manual').style.display = "none";                                          // hide overlay
         document.getElementById('flex_control_manual').style.opacity =  1;                                                  // set flexbox opacity
@@ -81,11 +97,36 @@ document.getElementById("mode_switch").addEventListener("click", function() {
         document.getElementById('flex_control_automatic').style.opacity =  0.5;                                             // set flexbox opacity
         document.getElementById('flex_control_automatic').style.webkitFilter = "blur(1px)";                                 // remove flexbox blur
     }
-});
+}
+
+
+// initially fetch current mode from server and adjust display
+function init_mode() {
+    fetch('/get_mode', {
+        method: 'get',
+    }).then(res => {
+        return res.text().then(text => {
+            if(res.status == 200) {
+                cur_mode = parseInt(text);
+                disp_mode(cur_mode);
+            }
+        });
+    });
+}
+init_mode();
 
 
 
-
+// set mode on the server
+function set_mode(mode) {
+    fetch('/set_mode?mode=' + mode, {
+        method: 'post',
+    }).then(res => {
+        if(res.status == 200) {
+            disp_mode(mode);
+        }
+    });
+}
 
 
 
@@ -351,20 +392,29 @@ document.getElementById("btn_fan_speed_minute").addEventListener("click", functi
 
 
 
-
 /******************************************************************************************
 SET TARGET VALUES
 ******************************************************************************************/
+var input_pressure = document.getElementById("target_pressure");
+var input_fan_speed = document.getElementById("target_fan_speed");
 
-document.getElementById("target_fan_speed").addEventListener('input', e => {
-    document.getElementById("label_target_fan_speed").innerHTML = document.getElementById("target_fan_speed").value + '%';
+input_pressure.addEventListener('change', e => {
+    document.getElementById("label_target_pressure").innerHTML = input_pressure.value + 'Pa';
+    send_cmd('set_pressure', input_pressure.value);
 });
 
-document.getElementById("target_pressure").addEventListener('input', e => {
-    document.getElementById("label_target_pressure").innerHTML = document.getElementById("target_pressure").value + 'Pa';
+input_fan_speed.addEventListener('change', e => {
+    document.getElementById("label_target_fan_speed").innerHTML = input_fan_speed.value + '%';
+    send_cmd('set_fan_speed', input_fan_speed.value);
 });
 
-
+function send_cmd(cmd, value) {
+    fetch('/cmd?cmd=' + cmd + '&value=' + value, {
+        method: 'post',
+    }).then(response => {
+        return 0;
+    });
+}
 
 
 
