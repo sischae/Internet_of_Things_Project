@@ -30,7 +30,7 @@ HEADER
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
-    box-shadow: 0px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 0px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 /* .flex_header_title */
@@ -175,13 +175,9 @@ LOGIN ACTIVITY
     flex-basis: auto;
     flex-grow: 1;
     
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 .flex_log_data {
@@ -256,14 +252,10 @@ CHANGE PASSWORD
     margin: 20px;
     
     padding-bottom: 20px;
-    
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
+
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 /**************************************
@@ -280,13 +272,9 @@ ADD NEW USER
     margin: 20px;
     padding-bottom: 20px;
     
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
     
     position: relative;
 }
@@ -350,13 +338,9 @@ canvas {
     flex: 1 1 0px;
     min-width: 350px;
     
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
     
     position: relative;
     
@@ -376,13 +360,9 @@ canvas {
     flex: 1 1 0px;
     min-width: 350px;
     
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
     
     position: relative;
     
@@ -402,13 +382,9 @@ canvas {
     min-width: 315px;
     max-width: 315px;
     
-    border-style: solid;
-    border-width: 1px;
-    /*border-color: #1cd2d9;*/
-    border-color: #262626;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 9px rgb(0 0 0 / 0.4);
 }
 
 
@@ -497,7 +473,78 @@ input:checked + .slider:before {
 
 
 /******************************************************************************************
-LOGOUT
+HELP PAGE
 ******************************************************************************************/
 
+.flex_help {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    
+    padding: 0px;
+    margin: 0px;
+}
 
+
+.flex_help_box {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 40px;
+    margin-top: 25px;
+    flex-basis: 60%;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+}
+
+
+
+.help_button {
+    font-size: 20px;
+}
+
+
+
+
+/******************************************************************************************
+LOGOUT PAGE
+******************************************************************************************/
+
+.flex_logout {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    
+    padding: 0px;
+    margin: 0px;
+}
+
+
+.flex_logout_box {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 40px;
+    margin-top: 25px;
+    flex-basis: 60%;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+}
+
+
+
+.logout_box_button {
+    font-size: 20px;
+}
