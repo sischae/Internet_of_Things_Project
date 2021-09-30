@@ -89,3 +89,25 @@ function resize_header(){
 
 
 
+
+
+/******************************************************************************************
+HELP PAGES
+******************************************************************************************/
+
+var help_button_back = document.getElementById("help_button_back");
+var help_button_next = document.getElementById("help_button_next");
+
+
+
+help_button_back.addEventListener("click", function() {
+    // show last page
+    
+    // check if buttons need to get enabled/disabled
+});
+
+help_button_next.addEventListener("click", function() {
+    // show next page
+    
+    // check if buttons need to get enabled/disabled
+});

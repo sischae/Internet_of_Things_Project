@@ -52,15 +52,6 @@ SWITCH MODE
 
 var cur_mode = 0;
 
-// INIT: DELETE AFTER FETCHING THE MODE IS IMPLEMENTED!!!
-document.getElementById('overlay_disabled_automatic').style.display = "none";                                               // hide overlay
-document.getElementById('flex_control_automatic').style.opacity =  1;                                                       // set flexbox opacity
-document.getElementById('flex_control_automatic').style.webkitFilter = "blur(0px)";                                         // remove flexbox blur
-document.getElementById('overlay_disabled_manual').style.display = "block";                                                 // hide overlay
-document.getElementById('flex_control_manual').style.opacity =  0.5;                                                        // set flexbox opacity
-document.getElementById('flex_control_manual').style.webkitFilter = "blur(1px)";                                            // remove flexbox blur
-
-
 
 // checkbox: false = automatic mode, true = manual mode
 document.getElementById("mode_switch").addEventListener("click", function() {
