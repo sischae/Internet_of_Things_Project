@@ -37,7 +37,7 @@ const mqtt_topic_sub = "sim/sensors/tmp";
 // setup connection
 var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
 mqtt_client.on("connect",function(){
-    console.log("Connected to mqtt broker")
+    console.log("Connected to mqtt broker");
 });
 
 mqtt_client.subscribe(mqtt_topic_sub);                                                                      // subscribe to the MQTT topic using the provided client
@@ -169,6 +169,21 @@ app.get('/data_cp', async (req, res, next) => {
     auth_user(req, res, next, req.query.data, req.query.interval);
 });
 
+// return the current mode (automatic/manual)
+app.get('/get_mode', async (req, res, next) => {
+    auth_user(req, res, next, 'get_mode');
+});
+
+// set the current mode (automatic/manual)
+app.post('/set_mode', async (req, res, next) => {
+    auth_user(req, res, next, 'set_mode', req.query.mode);
+});
+
+
+// return data to the control panel to be displayed in a plot
+app.post('/cmd', async (req, res, next) => {
+    auth_user(req, res, next, req.query.cmd, req.query.value);
+});
 
 
 
@@ -473,6 +488,52 @@ function get_data_cp(res, datatype, interval) {
 
 
 
+/******************************************************************************************
+SEND COMMAND VIA MQTT
+******************************************************************************************/
+
+function send_target_pressure(req, res, next, value) {
+    //console.log('Sending target pressure via MQTT: ' + value + 'Pa');
+    mqtt_client.publish(mqtt_topic_pub, value);
+    res.status(200).send('OK');
+}
+
+function send_target_fan_speed(req, res, next, value) {
+    //console.log('Sending target fan speed via MQTT: ' + value + '%');
+    mqtt_client.publish(mqtt_topic_pub, value);
+    res.status(200).send('OK');
+}
+
+
+
+
+/******************************************************************************************
+GET CURRENT MODE
+******************************************************************************************/
+
+var cur_mode = '1';
+
+function get_mode(req, res, next) {
+    res.status(200).send(cur_mode);
+}
+
+
+
+
+/******************************************************************************************
+SET CURRENT MODE
+******************************************************************************************/
+
+function set_mode(req, res, next, mode) {
+    if(mode == 0 || mode == 1) {
+        cur_mode = mode;
+        res.status(200).send('OK');
+    } else {
+        res.status(400).send('Bad request')
+    }
+}
+
+
 
 
 /******************************************************************************************
@@ -625,6 +686,21 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
                                 
                                 case 'fan_speed':
                                     get_data_cp(res, 'fan_speed', arg_dyn);
+                                    break;
+                                
+                                case 'set_pressure':
+                                    send_target_pressure(req, res, next, arg_dyn);
+                                    break;
+                                case 'set_fan_speed':
+                                    send_target_fan_speed(req, res, next, arg_dyn);
+                                    break;
+
+                                case 'get_mode':
+                                    get_mode(req, res, next);
+                                    break;
+                                
+                                case 'set_mode':
+                                    set_mode(req, res, next, arg_dyn);
                                     break;
                                 
                                 default:
