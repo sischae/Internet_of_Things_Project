@@ -11,11 +11,8 @@ The following packages are necessary to run the code. Install packages using "np
   - express
   - ejs
   - body-parser
-  - cookie-parser
-  - serialport
-  - mongodb
   - sqlite3
-  
+  - ws  
   
 ## Usage
 

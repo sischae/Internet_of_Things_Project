@@ -1,0 +1,113 @@
+'use strict';
+
+/******************************************************************************************
+LOGOUT
+******************************************************************************************/
+
+document.getElementById("logout").addEventListener("click", function() {
+    // send request to officially log out
+    var logout_request = new XMLHttpRequest();
+    logout_request.open( "GET", '/req_logout', false );
+    logout_request.send( null );
+    
+    // send invalid request to log out
+    var logout = new XMLHttpRequest();
+    logout.open("GET", "/logout", true, "invalid", "invalid");
+    logout.send();
+
+    // forward user to logout page
+    setTimeout(function () {
+        window.location.href = "/logout";
+    }, 10);
+});
+
+function add_logout_listener() {
+    document.getElementById("menu_logout_text").addEventListener("click", function() {
+        // send request to officially log out
+        var logout_request = new XMLHttpRequest();
+        logout_request.open( "GET", '/req_logout', false );
+        logout_request.send( null );
+        
+        // send invalid request to log out
+        var logout = new XMLHttpRequest();
+        logout.open("GET", "/logout", true, "invalid", "invalid");
+        logout.send();
+
+        // forward user to logout page
+        setTimeout(function () {
+            window.location.href = "/logout";
+        }, 10);
+    });
+}
+
+add_logout_listener();
+
+
+
+/******************************************************************************************
+RESPONSIVE HEADER
+******************************************************************************************/
+
+// initially resize header if the page was loaded in a small window or on a mobile phone
+resize_header();
+
+window.addEventListener("resize", function() {
+    resize_header();
+})
+
+
+// responsive header functionallity
+function resize_header(){
+    if (window.matchMedia("(min-width: 930px)").matches) {
+        document.getElementById("flex_title").innerHTML = 'VentPro';
+        //document.getElementById("flex_user").innerHTML = 'big';
+        document.getElementById("flex_menu").innerHTML = `
+            <a href="/help" class="flex_menu_text_active" id="menu_help_text">Help</a><a href="/help" class="flex_menu_item" id="menu_help"><img src="/public/img/icon_help.svg" class="menu_icon_active" /></a>
+            <a href="/control_panel" class="flex_menu_text_inactive" id="menu_control_panel_text">Control Panel</a><a href="/control_panel" class="flex_menu_item" id="menu_control_panel"><img src="/public/img/icon_control_panel.svg" class="menu_icon_inactive" /></a>
+            <a href="/settings" class="flex_menu_text_inactive" id="menu_settings_text">Settings</a><a href="/settings" class="flex_menu_item" id="menu_settings"><img src="/public/img/icon_settings.svg" class="menu_icon_inactive" /></a>
+            <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">Log out</a><a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
+        `;
+        add_logout_listener();
+    } else {
+        document.getElementById("flex_menu").innerHTML = `
+            <a href="/help" class="flex_menu_item" id="menu_help"><img src="/public/img/icon_help.svg" class="menu_icon_active" /></a>
+            <a href="/control_panel" class="flex_menu_item" id="menu_control_panel"><img src="/public/img/icon_control_panel.svg" class="menu_icon_inactive" /></a>
+            <a href="/settings" class="flex_menu_item" id="menu_settings"><img src="/public/img/icon_settings.svg" class="menu_icon_inactive" /></a>
+            <a href="/logout" id="logout" class="flex_menu_item" ><img src="/public/img/icon_logout.svg" class="menu_icon_inactive" /></a>
+        
+        `
+        if (window.matchMedia("(min-width: 580px)").matches) {
+            document.getElementById("flex_title").innerHTML = 'VentPro';
+            //document.getElementById("flex_user").innerHTML = '';
+        } else {
+            document.getElementById("flex_title").innerHTML = '';
+            //document.getElementById("flex_user").innerHTML = '';
+        }
+    }
+}
+
+
+
+
+
+
+/******************************************************************************************
+HELP PAGES
+******************************************************************************************/
+
+var help_button_back = document.getElementById("help_button_back");
+var help_button_next = document.getElementById("help_button_next");
+
+
+
+help_button_back.addEventListener("click", function() {
+    // show last page
+    
+    // check if buttons need to get enabled/disabled
+});
+
+help_button_next.addEventListener("click", function() {
+    // show next page
+    
+    // check if buttons need to get enabled/disabled
+});
