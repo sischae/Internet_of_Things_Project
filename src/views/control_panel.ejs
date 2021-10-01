@@ -4,7 +4,9 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="./public/style/style.css">
         <link rel="icon" type="image/png" href="/public/img/favicon_col_60x60.png" sizes="60x60">
-        <title>VentPro - Control Panel</title>
+        <title>Control Panel - VentPro</title>
+        
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.1/dist/chart.min.js"></script>
     </head>
     
     <body>
@@ -12,37 +14,127 @@
         <div class="flex_header">
             <div class="flex_menu">
                 <a href="/" ><img src="/public/img/ventilator_white.png" class="rotate" /></a>
-                <a href="/" class="flex_title">VentPro</a>
-                <div class="flex_user">
+                <a href="/" class="flex_title" id="flex_title">VentPro</a>
+            </div>
+            
+            <div class="flex_menu" id="flex_menu">
+                <a href="/help" class="flex_menu_text_inactive" id="menu_help_text">
+                    Help
+                </a>
+                <a href="/help" class="flex_menu_item" id="menu_help">
+                    <img src="/public/img/icon_help.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/control_panel" class="flex_menu_text_active" id="menu_control_panel_text">
+                    Control Panel
+                </a>
+                <a href="/control_panel" class="flex_menu_item" id="menu_control_panel">
+                    <img src="/public/img/icon_control_panel.svg" class="menu_icon_active" />
+                </a>
+                
+                <a href="/settings" class="flex_menu_text_inactive" id="menu_settings_text">
+                    Settings
+                </a>
+                <a href="/settings" class="flex_menu_item" id="menu_settings">
+                    <img src="/public/img/icon_settings.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">
+                    Log out
+                </a>
+                <a href="/logout" id="logout" class="flex_menu_item" >
+                    <img src="/public/img/icon_logout.svg" class="menu_icon_inactive" />
+                </a>
+            </div>
+        </div>
+        
+        
+    
+        <!--   toggle mode   -->
+        <div style="display: flex; flex-direction: row; justify-content: center;">
+            <div class="flex_control_toggle" id="flex_control_toggle">
+                <label>Automatic mode</label>
+                <label class="switch">
+                    <input id="mode_switch" type="checkbox">
+                    <span class="slider round"></span>
+                </label>
+                <label>Manual mode</label>
+            </div>
+        </div>
+        
+        
+    
+        <!--   control panel   -->
+        <div class="flex_control_panel" id="flex_control_panel">
+        
+            <!--   automatic mode   -->
+            <div class="flex_control_automatic" id="flex_control_automatic">
+                <div class="flex_control_panel_col">
+                    <h3>Automatic mode</h3>
                     
-                    <%= username %>
+                    <div id="overlay_disabled_automatic" class="overlay_disabled_control_panel">
+                    </div>
+                    
+                    <div height="200">
+                        <canvas id="chart_automatic"></canvas>
+                    </div>
+                    
+                    <div class="flex_control_panel" id="chart_scale_automatic" style="justify-content: flex-end;">
+                        <button id="btn_pressure_all">all</button>
+                        <button id="btn_pressure_day">today</button>
+                        <button id="btn_pressure_minute">last minute</button>
+                    </div>
+                    
+                    <div class="flex_control_panel_col" id="target_value_automatic" style="justify-content: center;">
+                        <div class="flex_control_panel" style="align-items: center;">
+                            <label>Set the target pressure:</label>
+                            <label id="label_target_pressure" style="margin-left: 10px;">0 Pa</label>
+                        </div>
+                        
+                        <div class="flex_control_panel" style="align-items: center;">
+                            <label>0 Pa</label>
+                            <input type="range" id="target_pressure" min="0" max="120" style="width: 75%; margin-left: 20px; margin-right: 20px;">
+                            <label>120 Pa</label>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <div class="flex_menu">
-                <a href="/control_panel" class="flex_menu_item">Control Panel</a>
-                <a href="/settings" class="flex_menu_item">Settings</a>
-                <a href="/" id="logout" class="flex_menu_item">Log out</a>
+            <!--   manual mode   -->
+            <div class="flex_control_manual" id="flex_control_manual">
+                <div class="flex_control_panel_col">
+                    <h3>Manual mode</h3>
+                    
+                    <div id="overlay_disabled_manual" class="overlay_disabled_control_panel">
+                    </div>
+                    
+                    <div height="200">
+                        <canvas id="chart_manual"></canvas>
+                    </div>
+                    
+                    <div class="flex_control_panel" id="chart_scale_manual" style="justify-content: flex-end;">
+                        <button id="btn_fan_speed_all">all</button>
+                        <button id="btn_fan_speed_day">today</button>
+                        <button id="btn_fan_speed_minute">last minute</button>
+                    </div>
+                    
+                    <div class="flex_control_panel_col" id="target_value_manual" style="justify-content: center;">
+                        <div class="flex_control_panel" style="align-items: center;">
+                            <label>Set the target fan speed:</label>
+                            <label id="label_target_fan_speed" style="margin-left: 10px;">0%</label>
+                        </div>
+                        
+                        <div class="flex_control_panel" style="align-items: center;">
+                            <label>0%</label>
+                            <input type="range" id="target_fan_speed" min="0" max="100" style="width: 80%; margin-left: 20px; margin-right: 20px;">
+                            <label>100%</label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
-        
-        
-        
-        
-        <div style="text-align: center; margin-top: 50px;">
-            control panel: work in progress
-        </div>
-        
-        <div style="text-align: center; margin-top: 50px;">
-            <button id="trigger_loading_animation" style="text-align: center; margin-top: 50px;">
-                test loading animation
-            </button>
-        </div>
-        
-        <div id="overlay">
-            <img src="/public/img/loading_animation_fast.svg" id="overlay_animation" />
-        </div>
+    
         
         <script async src="./public/js/control_panel.js"></script>
     </body>
