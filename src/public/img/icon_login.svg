@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   id="Layer_1"
+   enable-background="new 0 0 512 512"
+   height="512"
+   viewBox="0 0 512 512"
+   width="512"
+   version="1.1"
+   sodipodi:docname="icon_login.svg"
+   inkscape:version="1.1 (c4e8f9e, 2021-05-24)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs61" />
+  <sodipodi:namedview
+     id="namedview59"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="1.3164062"
+     inkscape:cx="296.64096"
+     inkscape:cy="261.31752"
+     inkscape:window-width="1440"
+     inkscape:window-height="872"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="g56" />
+  <g
+     id="g56">
+    <path
+       d="m392 512h-121c-66.168 0-120-53.832-120-120v-21c0-11.046 8.954-20 20-20s20 8.954 20 20v21c0 44.112 35.888 80 80 80h121c44.112 0 80-35.888 80-80v-272c0-44.112-35.888-80-80-80h-121c-44.112 0-80 35.888-80 80v20c0 11.046-8.954 20-20 20s-20-8.954-20-20v-20c0-66.168 53.832-120 120-120h121c66.168 0 120 53.832 120 120v272c0 66.168-53.832 120-120 120z"
+       id="path52"
+       style="fill:#00ffff" />
+    <path
+       d="m257 352c-5.128 0-10.254-1.959-14.161-5.876-7.8-7.821-7.783-20.484.038-28.285l46.289-46.166c3.764-3.751 5.834-8.731 5.834-14.025 0-5.273-2.055-10.236-5.788-13.98l-46.226-45.399c-7.88-7.74-7.995-20.402-.255-28.283s20.402-7.995 28.283-.255l46.289 45.461c.036.035.071.07.106.105 11.344 11.309 17.59 26.35 17.59 42.351s-6.247 31.041-17.59 42.35l-46.287 46.164c-3.902 3.892-9.013 5.838-14.122 5.838zm-1-96c0-11.046-8.954-20-20-20h-216c-11.046 0-20 8.954-20 20s8.954 20 20 20h216c11.046 0 20-8.954 20-20z"
+       id="path54"
+       style="fill:#00ffff" />
+  </g>
+</svg>

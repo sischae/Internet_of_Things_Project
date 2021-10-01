@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="./public/style/style.css">
         <link rel="icon" type="image/png" href="/public/img/favicon_col_60x60.png" sizes="60x60">
-        <title>VentPro - Settings</title>
+        <title>Settings - VentPro</title>
     </head>
     
     <body>
@@ -12,17 +12,37 @@
         <div class="flex_header">
             <div class="flex_menu">
                 <a href="/" ><img src="/public/img/ventilator_white.png" class="rotate" /></a>
-                <a href="/" class="flex_title">VentPro</a>
-                <div class="flex_user">
-                    
-                    <%= username %>
-                </div>
+                <a href="/" class="flex_title" id="flex_title">VentPro</a>
             </div>
             
-            <div class="flex_menu">
-                <a href="/control_panel" class="flex_menu_item">Control Panel</a>
-                <a href="/settings" class="flex_menu_item">Settings</a>
-                <a href="/" id="logout" class="flex_menu_item">Log out</a>
+                <div class="flex_menu" id="flex_menu">
+                <a href="/help" class="flex_menu_text_inactive" id="menu_help_text">
+                    Help
+                </a>
+                <a href="/help" class="flex_menu_item" id="menu_help">
+                    <img src="/public/img/icon_help.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/control_panel" class="flex_menu_text_inactive" id="menu_control_panel_text">
+                    Control Panel
+                </a>
+                <a href="/control_panel" class="flex_menu_item" id="menu_control_panel">
+                    <img src="/public/img/icon_control_panel.svg" class="menu_icon_inactive" />
+                </a>
+                
+                <a href="/settings" class="flex_menu_text_active" id="menu_settings_text">
+                    Settings
+                </a>
+                <a href="/settings" class="flex_menu_item" id="menu_settings">
+                    <img src="/public/img/icon_settings.svg" class="menu_icon_active" />
+                </a>
+                
+                <a href="/logout" class="flex_menu_text_inactive" id="menu_logout_text">
+                    Log out
+                </a>
+                <a href="/logout" id="logout" class="flex_menu_item" >
+                    <img src="/public/img/icon_logout.svg" class="menu_icon_inactive" />
+                </a>
             </div>
         </div>
         
@@ -43,11 +63,16 @@
                     <button class="flex_acc_settings_input" id="set_pw">OK</button>
                 </form>
                 <form class="flex_acc_add_user" id="flex_acc_add_user">
-                    <h3 class="flex_acc_settings_input">Add a new user</h3>
-                    <input type="text" id="add_user_username" class="flex_acc_settings_input" placeholder="Enter a new username" required></br></br>
-                    <input type="password" id="add_user_password" class="flex_acc_settings_input" placeholder="Enter a new password" required>
-                    <button class="flex_acc_settings_input" id="add_user">OK</button>
-                    <div class="info" style="margin-top: 27px;">Only admins can add a new user.</div>
+                    <div id="acc_add_user_blur">
+                        <h3 class="flex_acc_settings_input">Add a new user</h3>
+                        <input type="text" id="add_user_username" class="flex_acc_settings_input" placeholder="Enter a new username" required></br></br>
+                        <input type="password" id="add_user_password" class="flex_acc_settings_input" placeholder="Enter a new password" required>
+                        <button class="flex_acc_settings_input" id="add_user">OK</button>
+                        <div id="acc_add_user_info" class="info" style="margin-top: 27px;">Only admins can add a new user.</div>
+                    </div>
+                    <div id="overlay_disabled" class="overlay_disabled">
+                        <div class="info" style="margin-top: 223px; margin-left: 40px;">Only admins can add a new user.</div>
+                    </div>
                 </form>
             </div>
         </div>

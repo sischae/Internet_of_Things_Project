@@ -25,23 +25,26 @@ HEADER
 /* flex box for the header */
 .flex_header {
     display: flex;
-    background: #1cd2d9;
+    /*background: #1cd2d9;*/
+    background: #262626;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
-    box-shadow: 0px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 0px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 /* .flex_header_title */
 .flex_title {
     padding: 20;
-    font-size: 45px;
+    font-size: 50px;
     font-weight: bold;
     font-style: italic;
     text-decoration: none;
     color: white;
     margin: 15px;
     margin-left: 5px;
+    margin-bottom: 5px;
+    margin-top: 5px;
 }
 
 /* flex_user */
@@ -60,7 +63,10 @@ HEADER
 /* .flex_header_menu */
 .flex_menu {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
+    justify-content: right;
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
 
 /* flex_menu_item */
@@ -69,8 +75,32 @@ HEADER
     font-size: 20px;
     font-weight: normal;
     text-decoration: none;
-    color: #0d6266;
-    margin-right: 40px;
+    /*color: #0d6266;*/
+    color: white;
+    margin-left: 10px;
+    margin-right: 15px;
+}
+
+.flex_menu_text_active {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+    /*color: #0d6266;*/
+    color: #03ffff;
+    margin-left: 15px;
+    margin-right: 0px;
+}
+
+.flex_menu_text_inactive {
+    padding: 20;
+    font-size: 20px;
+    font-weight: normal;
+    text-decoration: none;
+    /*color: #0d6266;*/
+    color: #c8c9c9;
+    margin-left: 15px;
+    margin-right: 0px;
 }
 
 
@@ -78,9 +108,10 @@ HEADER
 /* icon source: https://www.freepik.com */
 .rotate {
     animation: rotation 8s infinite linear;
-    margin: 5px;
-    width: 68px;
-    height: 68px;
+    margin: 0px;
+    margin-left: 5px;
+    width: 60px;
+    height: 60px;
 }
 @keyframes rotation {
   from {
@@ -91,6 +122,20 @@ HEADER
   }
 }
 
+
+.menu_icon_inactive {
+    margin: 5px;
+    width: 35px;
+    height: 35px;
+    filter: saturate(0);
+}
+
+.menu_icon_active {
+    margin: 5px;
+    width: 35px;
+    height: 35px;
+    filter: saturate(1);
+}
 
 
 /******************************************************************************************
@@ -110,7 +155,8 @@ SETTINGS
 .info {
     font-size: 15px;
     font-style: italic;
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     margin-left: 30px;
     margin-top: 0px;
 }
@@ -129,16 +175,14 @@ LOGIN ACTIVITY
     flex-basis: auto;
     flex-grow: 1;
     
-    border-style: solid;
-    border-width: 1px;
-    border-color: #1cd2d9;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 .flex_log_data {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -199,7 +243,8 @@ CHANGE PASSWORD
 */
 
 .flex_acc_change_pw {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -207,13 +252,10 @@ CHANGE PASSWORD
     margin: 20px;
     
     padding-bottom: 20px;
-    
-    border-style: solid;
-    border-width: 1px;
-    border-color: #1cd2d9;
+
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
 }
 
 /**************************************
@@ -221,7 +263,8 @@ ADD NEW USER
 */
 
 .flex_acc_add_user {
-    color: #0d6266;
+    /*color: #0d6266;*/
+    color: #262626;
     font-size: 20px;
     font-weight: normal;
     
@@ -229,12 +272,25 @@ ADD NEW USER
     margin: 20px;
     padding-bottom: 20px;
     
-    border-style: solid;
-    border-width: 1px;
-    border-color: #1cd2d9;
     border-radius: 10px;
     
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.3);
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+    
+    position: relative;
+}
+
+#acc_add_user_blur {
+    /* disable form by default: bluring and reducing opacity to indicate unavailable function */
+    opacity: 0.5;
+    filter: blur(1px);
+}
+
+/* overlay make input fields and button inaccessible to the user */
+.overlay_disabled {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0);
+    z-index: 2;
 }
 
 
@@ -245,30 +301,250 @@ ADD NEW USER
 CONTROL PANEL
 ******************************************************************************************/
 
+canvas {
+        margin-bottom: 10px;
+}
+
+
+.flex_control_panel {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    
+    padding: 0px;
+    margin: 0px;
+    margin-bottom: 20px;
+}
+
+.flex_control_panel_col {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 0px;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+.flex_control_automatic {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 20px;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex: 1 1 0px;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+    
+    position: relative;
+    
+    /* disable form by default: bluring and reducing opacity to indicate unavailable function */
+    opacity: 0.5;
+    filter: blur(1px);
+}
+
+.flex_control_manual {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 20px;
+    flex-basis: auto;
+    flex-grow: 1;
+    flex: 1 1 0px;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+    
+    position: relative;
+    
+    /* disable form by default: bluring and reducing opacity to indicate unavailable function */
+    opacity: 0.5;
+    filter: blur(1px);
+}
+
+.flex_control_toggle {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    
+    padding: 10px;
+    margin: 20px;
+    min-width: 315px;
+    max-width: 315px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 9px rgb(0 0 0 / 0.4);
+}
+
+
 /**************************************
-Overlay for switching between modes
+TOGGLE SWITCH
 */
 
-#overlay {
-  position: fixed; /* Sit on top of the page content */
-  display: none; /* Hidden by default */
-  width: 100%; /* Full width (cover the whole page) */
-  height: 100%; /* Full height (cover the whole page) */
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  margin-left: 20px;
+  margin-right: 20px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0,0,0,0.3); /* Black background with opacity */
-  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
-  cursor: pointer; /* Add a pointer on hover */
+  background-color: #262626;
+  -webkit-transition: .4s;
+  transition: .4s;
 }
 
-#overlay_animation{
+.slider:before {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 100px;
-  height: 100px;
-  transform: translate(-50%,-50%);
-  -ms-transform: translate(-50%,-50%);
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: #03ffff;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #262626;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #262626;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+
+/* overlay make input fields and button inaccessible to the user */
+.overlay_disabled_control_panel {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0);
+    z-index: 2;
+}
+
+
+
+
+
+
+
+/******************************************************************************************
+HELP PAGE
+******************************************************************************************/
+
+.flex_help {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    
+    padding: 0px;
+    margin: 0px;
+}
+
+
+.flex_help_box {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 40px;
+    margin-top: 25px;
+    flex-basis: 60%;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+}
+
+
+
+.help_button {
+    font-size: 20px;
+}
+
+
+
+
+/******************************************************************************************
+LOGOUT PAGE
+******************************************************************************************/
+
+.flex_logout {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    
+    padding: 0px;
+    margin: 0px;
+}
+
+
+.flex_logout_box {
+    display: flex;
+    flex-direction: column;
+    
+    padding: 10px;
+    margin: 40px;
+    margin-top: 25px;
+    flex-basis: 60%;
+    min-width: 350px;
+    
+    border-radius: 10px;
+    
+    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+}
+
+
+
+.logout_box_button {
+    font-size: 20px;
 }
