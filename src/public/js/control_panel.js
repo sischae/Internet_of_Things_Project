@@ -138,7 +138,7 @@ window.addEventListener("resize", function() {
     resize_header();
 })
 
-
+/*
 // responsive header functionallity
 function resize_header(){
     if (window.matchMedia("(min-width: 930px)").matches) {
@@ -169,7 +169,7 @@ function resize_header(){
     }
 }
 
-
+*/
 
 
 

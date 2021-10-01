@@ -277,7 +277,7 @@ getPermission();
 /******************************************************************************************
 RESPONSIVE HEADER
 ******************************************************************************************/
-
+/*
 // initially resize header if the page was loaded in a small window or on a mobile phone
 resize_header();
 
@@ -315,3 +315,4 @@ function resize_header(){
         }
     }
 }
+*/
