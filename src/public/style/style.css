@@ -493,14 +493,13 @@ HELP PAGE
     flex-direction: column;
     
     padding: 10px;
-    margin: 40px;
-    margin-top: 25px;
-    flex-basis: 60%;
-    min-width: 350px;
-    
-    border-radius: 10px;
-    
-    box-shadow: 1px 2px 10px rgb(0 0 0 / 0.4);
+    margin: 25px 65px 0px 65px;
+    flex-basis: 100%;
+    min-width: 350px;  
+}
+
+.p-help{
+   line-height: 30px;
 }
 
 
@@ -508,6 +507,51 @@ HELP PAGE
 .help_button {
     font-size: 20px;
 }
+
+.accordion {
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 18px;
+    transition: 0.4s;
+    border-radius: 8px;
+   
+    background-color: white;
+    
+    box-shadow: 1px 2px 5px rgb(0 0 0 / 0.3);
+    
+  }
+  
+  .active, .accordion:hover {
+    transform: scale(1.01); 
+  }
+  
+  .panel {
+    padding: 0 18px;
+    /* background-color: #D9FFFE; */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+    margin-bottom: 20px;
+    font-size: 18px;
+    border-radius: 0px 0px 8px 8px;
+  }
+
+  .accordion:after {
+    content: '\002B';
+    color: #00deeb;
+    font-size: 25px;
+    font-weight: bold;
+    float: right;
+    margin-left: 5px;
+  }
+  
+  .active:after {
+    content: "\2212"; /* Unicode character for "minus" sign (-) */
+  }
 
 
 
