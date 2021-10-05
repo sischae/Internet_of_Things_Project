@@ -229,8 +229,6 @@ function mqtt_msg_to_db(samplenr, timestamp, temperature) {
 GET LOG-IN ACTIVITIY
 ******************************************************************************************/
 
-//TESSSSST
-
 function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
