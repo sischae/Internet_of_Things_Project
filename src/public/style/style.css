@@ -134,7 +134,7 @@ HEADER
     margin: 5px;
     width: 35px;
     height: 35px;
-    filter: saturate(1);
+    filter: invert(0) sepia(1) saturate(20) hue-rotate(160deg);
 }
 
 
@@ -626,6 +626,7 @@ LOGOUT PAGE
 .flex_logout_box {
     display: flex;
     flex-direction: column;
+    text-align: center;
     
     padding: 10px;
     margin: 40px;
@@ -642,4 +643,36 @@ LOGOUT PAGE
 
 .logout_box_button {
     font-size: 20px;
+}
+
+.flex_logout_box p {
+    font-size: large;
+}
+
+.logout_icon {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 20%;
+    padding-top: 3em;
+    filter: invert(0) sepia(1) saturate(20) hue-rotate(160deg);
+}
+
+
+
+
+/******************************************************************************************
+RESPONSIVE HEADER
+******************************************************************************************/
+
+@media screen and (max-width: 920px) {
+    #menu_help_text, #menu_control_panel_text, #menu_settings_text, #menu_logout_text{
+        display: none;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .flex_title{
+        display: none;
+    }
 }
