@@ -184,6 +184,7 @@ SETTINGS
     border-color: rgba(0, 0, 0, 0.12);
 }
 
+
 /**************************************
 LOGIN ACTIVITY
 **************************************/
@@ -490,6 +491,7 @@ input:checked + .slider:before {
     background-color: rgba(0,0,0,0);
     z-index: 2;
 }
+
 
 .buttons_control_panel {
     font-weight: normal;
