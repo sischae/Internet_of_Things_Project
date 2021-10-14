@@ -30,8 +30,8 @@ MQTT SETUP
 // configuration
 const mqtt_ip = "mqtt://localhost";
 const mqtt_port = "1883";
-const mqtt_topic_pub = "";
-const mqtt_topic_sub = "sim/sensors/tmp";
+const mqtt_topic_pub = "controller/settings";
+const mqtt_topic_sub = "controller/status";
 
 
 // setup connection
@@ -45,7 +45,7 @@ console.log('Connected to MQTT broker. Subscribing to ' + mqtt_topic_sub);
 
 mqtt_client.on('message',function(topic, message, packet) {
     let msg = JSON.parse(message);                                                                          // parse received data
-    mqtt_msg_to_db(msg.samplenr, msg.timestamp, msg.temperature);                                           // add received data to the database
+    mqtt_msg_to_db(msg.nr, msg.speed, msg.setpoint, msg.pressure, msg.auto, msg.error);                     // add received data to the database
 });
 
 
@@ -61,6 +61,9 @@ console.log('WebSocket server running. Listening on port 8000...');
 
 // handle incoming connections from clients
 webSocketServer.on('connection', (ws, req) => {
+    let error_last = false;                                                                                     // indicator to detect a new error via MQTT
+    let client_cp = false;                                                                                      // control panel: true, other pages: false
+    
     // identify client (important for closing the connection later on)
     const key = req.headers['sec-websocket-key'];
     ws.upgradeReq = req;
@@ -70,13 +73,13 @@ webSocketServer.on('connection', (ws, req) => {
 
     // return confirmation on incoming messages
     ws.on('message', function incoming(data) {
-        if(data == 'ping') {
-            ws.send('pong');
+        if(data == 'connect_cp') {
+            client_cp = true;
         } else {
-            ws.send('OK');
+            client_cp = false;
         }
     });
-
+    
     
     // handle disconnections
     ws.on('close', function () {
@@ -87,8 +90,36 @@ webSocketServer.on('connection', (ws, req) => {
     // subscribe to MQTT topic and forward data
     mqtt_client.subscribe(mqtt_topic_sub);
     mqtt_client.on('message',function(topic, message, packet) {
-        let msg = JSON.parse(message);                                                                          // parse received data
-        ws.send(msg.temperature);                                                                               // forward new data to the client
+        let msg_received = JSON.parse(message);                                                                 // parse received data
+        
+        if(client_cp) {                                                                                         // send data to control panel only
+            let msg_send = JSON.parse('{"id": "data", "speed": ' + msg_received.speed + ', "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + msg_received.error + '}');
+            
+            // check for error
+            if(msg_send.error) {
+                if(!error_last) {
+                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
+                } else {
+                    msg_send.error = false;                                                                     // do not send error
+                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
+                }
+                error_last = true;
+            } else {
+                msg_send.error = false;                                                                         // do not send error
+                ws.send(JSON.stringify(msg_send));                                                              // forward new data to the client
+                error_last = false;
+            }
+        } else {
+            // check for error
+            if(msg_received.error) {
+                if(!error_last) {
+                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + '}');
+                }
+                error_last = true;
+            } else {
+                error_last = false;
+            }
+        }
     });
 });
 
@@ -199,18 +230,18 @@ MQTT DATA LOGGING AND FORWARDING
 ******************************************************************************************/
 
 // add data to the database after receiving a message via MQTT
-function mqtt_msg_to_db(samplenr, timestamp, temperature) {
+function mqtt_msg_to_db(nr, speed, setpoint, pressure, auto, error) {
     
     // PROTOTYPE FUNCTION WRITING EXAMPLE DATA RECEIVED IN A WRING FORMAT
     let db = new sqlite3.Database(path_db);                                                                     // connect to database
     
-    db.run('INSERT INTO pressure(timestamp, pressure) VALUES(' + Date.now() + ', ' + temperature * 2 + ')', function(err) {
+    db.run('INSERT INTO pressure(timestamp, pressure) VALUES(' + Date.now() + ', ' + pressure + ')', function(err) {
         if (err) {                                                                                              // catch errors
             return console.log(err.message);                                                                    // log
         }
     });
     
-    db.run('INSERT INTO fan_speed(timestamp, fan_speed) VALUES(' + Date.now() + ', ' + temperature + ')', function(err) {
+    db.run('INSERT INTO fan_speed(timestamp, fan_speed) VALUES(' + Date.now() + ', ' + speed + ')', function(err) {
         if (err) {                                                                                              // catch errors
             return console.log(err.message);                                                                    // log
         }
@@ -503,16 +534,12 @@ var target_pressure = 0;
 var target_fan_speed = 0;
 
 function send_target_pressure(req, res, next, value) {
-    //console.log('Sending target pressure via MQTT: ' + value + 'Pa');
-    target_pressure = value;
-    mqtt_client.publish(mqtt_topic_pub, value);
+    mqtt_client.publish(mqtt_topic_pub, '{"auto": true, "pressure": ' + value + '}');
     res.status(200).send('OK');
 }
 
 function send_target_fan_speed(req, res, next, value) {
-    //console.log('Sending target fan speed via MQTT: ' + value + '%');
-    target_fan_speed = value;
-    mqtt_client.publish(mqtt_topic_pub, value);
+    mqtt_client.publish(mqtt_topic_pub, '{"auto": false, "speed": ' + value + '}');
     res.status(200).send('OK');
 }
 
