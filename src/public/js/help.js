@@ -46,22 +46,23 @@ add_logout_listener();
 
 
 /******************************************************************************************
-HELP PAGES
+WEBSOCKET
 ******************************************************************************************/
 
-var help_button_back = document.getElementById("help_button_back");
-var help_button_next = document.getElementById("help_button_next");
+// setup connection to the WebsocketServer
+var ws_client = new WebSocket('ws://localhost:8000');
+var last_err = false;
 
-
-
-help_button_back.addEventListener("click", function() {
-    // show last page
+ws_client.onopen = () => {
     
-    // check if buttons need to get enabled/disabled
-});
-
-help_button_next.addEventListener("click", function() {
-    // show next page
+    ws_client.send('connect_help');                                                                                           // connect as control panel
     
-    // check if buttons need to get enabled/disabled
-});
+    ws_client.onmessage = (message) => {
+        let msg = JSON.parse(message.data);
+        
+        if(msg.id == "error") {
+            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+        }
+    };
+};
+

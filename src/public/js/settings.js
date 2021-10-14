@@ -123,8 +123,8 @@ function loadPage(dir) {
     // add navigation
     const arrows = document.createElement('div');                                                       // create buttons to navigate between the pages
     arrows.innerHTML = `
-            <button id="lastPage" class="page_nav" style="margin-left: 30px;"><--</button>
-            <button id="nextPage" class="page_nav">--></button>
+            <button id="lastPage" class="page_nav" style="margin-left: 30px;"><i class="fas fa-angle-left"></i></button>
+            <button id="nextPage" class="page_nav"><i class="fas fa-angle-right"></i></button>
             <label class="info" style="margin-left: 0px;">` + (cur_page + 1) + `/` + pages + `</label>
     `;
     document.getElementById('log_users').appendChild(arrows);                                           // add buttons
@@ -273,3 +273,26 @@ function getPermission() {
 }
 getPermission();
 
+
+
+
+/******************************************************************************************
+WEBSOCKET
+******************************************************************************************/
+
+// setup connection to the WebsocketServer
+var ws_client = new WebSocket('ws://localhost:8000');
+var last_err = false;
+
+ws_client.onopen = () => {
+    
+    ws_client.send('connect_settings');                                                                 // connect as control panel
+    
+    ws_client.onmessage = (message) => {
+        let msg = JSON.parse(message.data);
+        
+        if(msg.id == "error") {
+            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+        }
+    };
+};

@@ -1,3 +1,9 @@
+/******************************************************************************************
+PRIMARY COLOR
+color: #90fbff;
+******************************************************************************************/
+
+
 /* Style the body */
 body {
     font-family: Arial;
@@ -86,8 +92,7 @@ HEADER
     font-size: 20px;
     font-weight: normal;
     text-decoration: none;
-    /*color: #0d6266;*/
-    color: #03ffff;
+    color: #90fbff;
     margin-left: 15px;
     margin-right: 0px;
 }
@@ -155,10 +160,29 @@ SETTINGS
 .info {
     font-size: 15px;
     font-style: italic;
-    /*color: #0d6266;*/
     color: #262626;
     margin-left: 30px;
-    margin-top: 0px;
+}
+
+#set_pw{
+    font-size: 18px;
+    font-weight: 600;
+    padding: 0.2em 0.5em;
+    margin-left: 0.5em;
+    border-radius: 5px;
+    background-color: hsla(182, 100%, 78%, 0.4);
+    color:rgba(30,128,133,1);
+    border-color: rgba(0, 0, 0, 0.12);
+}
+#add_user{
+    font-size: 18px;
+    font-weight: 600;
+    padding: 0.2em 0.5em;
+    margin-left: 0.5em;
+    border-radius: 5px;
+    background-color: hsla(182, 100%, 78%, 0.4);
+    color:rgba(30,128,133,1);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
 
@@ -181,7 +205,6 @@ LOGIN ACTIVITY
 }
 
 .flex_log_data {
-    /*color: #0d6266;*/
     color: #262626;
     font-size: 20px;
     font-weight: normal;
@@ -191,20 +214,24 @@ LOGIN ACTIVITY
 }
 
 .page_nav {
-    color: #0d6266;
-    font-size: 15px;
     font-weight: normal;
-    
-    margin-top: 0px;
-    margin-bottom: 8px;
-    margin-right: 0px;
+    font-size: 15px;
+    padding: 0.1em 0.3em;
+    margin-left: 0.5em;
+    border-radius: 5px;
+    background-color: hsla(182, 100%, 78%, 0.4);
+    color:rgba(30,128,133,1);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
+i {
+    font-size: 25px;
+ }
+
 .page_nav:disabled {
-    color: lightgray;
+    color: gray;
     font-size: 15px;
     font-weight: normal;
-    
     margin-top: 0px;
     margin-bottom: 3px;
 }
@@ -429,7 +456,7 @@ TOGGLE SWITCH
   width: 26px;
   left: 4px;
   bottom: 4px;
-  background-color: #03ffff;
+  background-color: #90fbff;
   -webkit-transition: .4s;
   transition: .4s;
 }
@@ -467,8 +494,16 @@ input:checked + .slider:before {
 }
 
 
-
-
+.buttons_control_panel {
+    font-weight: normal;
+    font-size: 15px;
+    padding: 0.1em 0.3em;
+    margin-left: 0.5em;
+    border-radius: 5px;
+    background-color: hsla(182, 100%, 78%, 0.4);
+    color:rgba(30,128,133,1);
+    border-color: rgba(0, 0, 0, 0.12);
+}
 
 
 
