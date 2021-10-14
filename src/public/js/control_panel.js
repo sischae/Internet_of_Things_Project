@@ -171,10 +171,10 @@ function display_plot_pressure() {
                 label: 'current pressure',
                 data: pressure_y,
                 backgroundColor: [
-                    'rgba(204, 80, 107, 0.2)'
+                    'rgba(30, 128, 133, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(204, 80, 107, 1)'
+                    'rgba(30, 128, 133, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4
@@ -213,10 +213,10 @@ function display_plot_fan_speed() {
                 label: 'current fan speed',
                 data: fan_speed_y,
                 backgroundColor: [
-                    'rgba(64, 153, 60, 0.2)'
+                    'rgba(28, 188, 196, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(64, 153, 60, 1)'
+                    'rgba(28, 188, 196, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4

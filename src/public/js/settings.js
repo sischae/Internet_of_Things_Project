@@ -123,8 +123,8 @@ function loadPage(dir) {
     // add navigation
     const arrows = document.createElement('div');                                                       // create buttons to navigate between the pages
     arrows.innerHTML = `
-            <button id="lastPage" class="page_nav" style="margin-left: 30px;"><--</button>
-            <button id="nextPage" class="page_nav">--></button>
+            <button id="lastPage" class="page_nav" style="margin-left: 30px;"><i class="fas fa-angle-left"></i></button>
+            <button id="nextPage" class="page_nav"><i class="fas fa-angle-right"></i></button>
             <label class="info" style="margin-left: 0px;">` + (cur_page + 1) + `/` + pages + `</label>
     `;
     document.getElementById('log_users').appendChild(arrows);                                           // add buttons
