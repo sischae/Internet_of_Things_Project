@@ -273,3 +273,26 @@ function getPermission() {
 }
 getPermission();
 
+
+
+
+/******************************************************************************************
+WEBSOCKET
+******************************************************************************************/
+
+// setup connection to the WebsocketServer
+var ws_client = new WebSocket('ws://localhost:8000');
+var last_err = false;
+
+ws_client.onopen = () => {
+    
+    ws_client.send('connect_settings');                                                                 // connect as control panel
+    
+    ws_client.onmessage = (message) => {
+        let msg = JSON.parse(message.data);
+        
+        if(msg.id == "error") {
+            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+        }
+    };
+};

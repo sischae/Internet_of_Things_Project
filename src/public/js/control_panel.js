@@ -387,22 +387,23 @@ WEBSOCKET
 ******************************************************************************************/
 
 // setup connection to the WebsocketServer
-const ws_client = new WebSocket('ws://localhost:8000');
+var ws_client = new WebSocket('ws://localhost:8000');
+var last_err = false;
 
 ws_client.onopen = () => {
-    //console.log('[WebSocket] Connected to the server');
     
-    ws_client.send('ping');
+    ws_client.send('connect_cp');                                                                                           // connect as control panel
     
     ws_client.onmessage = (message) => {
-        //console.log('[WebSocket] Received message: ' + message.data);
+        let msg = JSON.parse(message.data);
         
-        // update plot_pressure
-        if(Number.isInteger(parseInt(message.data))) {
+        
+        if(msg.id == "data") {
+            // update plot_pressure
             if(plot_pressure_interval == 'all') {
                 let tim = new Date(Date.now());
                 pressure_x.push(tim.formatDDMM());
-                pressure_y.push(parseInt(message.data));
+                pressure_y.push(parseInt(msg.pressure));
 
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
@@ -412,7 +413,7 @@ ws_client.onopen = () => {
             } else if (plot_pressure_interval == 'day') {
                 let tim = new Date(Date.now());
                 pressure_x.push(tim.formatHHMMSS());
-                pressure_y.push(parseInt(message.data));
+                pressure_y.push(parseInt(msg.pressure));
 
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
@@ -429,7 +430,7 @@ ws_client.onopen = () => {
                 }
                 
                 pressure_x.push(tim.formatHHMMSS());
-                pressure_y.push(parseInt(message.data));
+                pressure_y.push(parseInt(msg.pressure));
 
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
@@ -437,14 +438,12 @@ ws_client.onopen = () => {
                   });
                 plot_pressure.update();
             }
-        }
-        
-        // update plot_fan_speed
-        if(Number.isInteger(parseInt(message.data))) {
+            
+            // update plot_fan_speed
             if(plot_fan_speed_interval == 'all') {
                 let tim = new Date(Date.now());
                 fan_speed_x.push(tim.formatDDMM());
-                fan_speed_y.push(parseInt(message.data));
+                fan_speed_y.push(parseInt(msg.speed));
 
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
@@ -454,7 +453,7 @@ ws_client.onopen = () => {
             } else if (plot_fan_speed_interval == 'day') {
                 let tim = new Date(Date.now());
                 fan_speed_x.push(tim.formatHHMMSS());
-                fan_speed_y.push(parseInt(message.data));
+                fan_speed_y.push(parseInt(msg.speed));
 
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
@@ -471,13 +470,19 @@ ws_client.onopen = () => {
                 }
                 
                 fan_speed_x.push(tim.formatHHMMSS());
-                fan_speed_y.push(parseInt(message.data));
+                fan_speed_y.push(parseInt(msg.speed));
 
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
                   });
                 plot_fan_speed.update();
+            }
+            
+            
+            // check for error
+            if(msg.error) {
+                alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
             }
         }
     };
