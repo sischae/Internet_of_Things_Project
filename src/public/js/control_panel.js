@@ -57,8 +57,10 @@ var cur_mode = 0;
 document.getElementById("mode_switch").addEventListener("click", function() {
     if(!document.getElementById("mode_switch").checked) {
         set_mode(0);                                                                                                        // AUTOMATIC MODE
+        send_cmd('set_pressure', input_pressure.value);
     } else {
         set_mode(1);                                                                                                        // MANUAL MODE
+        send_cmd('set_fan_speed', input_fan_speed.value);
     }
 });
 
@@ -345,6 +347,7 @@ document.getElementById("btn_fan_speed_minute").addEventListener("click", functi
 /******************************************************************************************
 SET TARGET VALUES
 ******************************************************************************************/
+
 var input_pressure = document.getElementById("target_pressure");
 var input_fan_speed = document.getElementById("target_fan_speed");
 
@@ -356,6 +359,14 @@ input_pressure.addEventListener('change', e => {
 input_fan_speed.addEventListener('change', e => {
     document.getElementById("label_target_fan_speed").innerHTML = input_fan_speed.value + '%';
     send_cmd('set_fan_speed', input_fan_speed.value);
+});
+
+input_pressure.addEventListener('input', e => {
+    document.getElementById("label_target_pressure").innerHTML = input_pressure.value + 'Pa';
+});
+
+input_fan_speed.addEventListener('input', e => {
+    document.getElementById("label_target_fan_speed").innerHTML = input_fan_speed.value + '%';
 });
 
 
@@ -380,6 +391,7 @@ function get_target_values() {
     });
 }
 get_target_values();
+
 
 
 /******************************************************************************************
@@ -408,6 +420,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             } else if (plot_pressure_interval == 'day') {
@@ -418,6 +431,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             } else if (plot_pressure_interval == 'minute') {
@@ -435,6 +449,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             }
@@ -448,6 +463,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             } else if (plot_fan_speed_interval == 'day') {
@@ -458,6 +474,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             } else if (plot_fan_speed_interval == 'minute') {
@@ -475,6 +492,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             }
@@ -487,10 +505,6 @@ ws_client.onopen = () => {
         }
     };
 };
-
-
-
-
 
 
 
