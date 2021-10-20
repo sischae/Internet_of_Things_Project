@@ -534,11 +534,13 @@ var target_pressure = 0;
 var target_fan_speed = 0;
 
 function send_target_pressure(req, res, next, value) {
+    target_pressure = value;
     mqtt_client.publish(mqtt_topic_pub, '{"auto": true, "pressure": ' + value + '}');
     res.status(200).send('OK');
 }
 
 function send_target_fan_speed(req, res, next, value) {
+    target_fan_speed = value;
     mqtt_client.publish(mqtt_topic_pub, '{"auto": false, "speed": ' + value + '}');
     res.status(200).send('OK');
 }
