@@ -213,10 +213,10 @@ function display_plot_fan_speed() {
                 label: 'current fan speed',
                 data: fan_speed_y,
                 backgroundColor: [
-                    'rgba(28, 188, 196, 0.2)'
+                    'rgba(30, 128, 133, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(28, 188, 196, 1)'
+                    'rgba(30, 128, 133, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4
