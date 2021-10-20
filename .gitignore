@@ -12,6 +12,8 @@
 
 .DS_Store
 
+*.ist
+*.icloud
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
