@@ -483,7 +483,7 @@ function get_data_cp(res, datatype, interval) {
                     return console.error(err.message);                                                      // log
                 }
                 
-                res.status(200).json(data);
+                res.status(200).json(shorten_array(data));
             });
             break;
             
@@ -513,7 +513,8 @@ function get_data_cp(res, datatype, interval) {
                     return console.error(err.message);                                                      // log
                 }
                 
-                res.status(200).json(data);
+                
+                res.status(200).json(shorten_array(data));
             });
             break;
             
@@ -521,6 +522,28 @@ function get_data_cp(res, datatype, interval) {
             res.status(404).send('Requested recource not found.')
             break;
     }
+}
+
+
+// shorten large arrays to reduce traffic and to increase interface performance
+function shorten_array(arr) {
+    let res = arr;
+    let comp = arr;
+    
+    while(res.length > 1000) {
+        res = [];
+        let idx = 0;
+        
+        for(let i = 0; i < comp.length; i++) {
+            res[idx] = comp[i];
+            idx++;
+            i++;
+        }
+        
+        comp = res;
+    }
+    
+    return res;
 }
 
 
@@ -535,14 +558,47 @@ var target_fan_speed = 0;
 
 function send_target_pressure(req, res, next, value) {
     target_pressure = value;
-    mqtt_client.publish(mqtt_topic_pub, '{"auto": true, "pressure": ' + value + '}');
+    mqtt_client.publish(mqtt_topic_pub, '{"auto": true, "pressure": ' + target_pressure + '}');
+    save_target_values();
     res.status(200).send('OK');
 }
 
 function send_target_fan_speed(req, res, next, value) {
     target_fan_speed = value;
-    mqtt_client.publish(mqtt_topic_pub, '{"auto": false, "speed": ' + value + '}');
+    mqtt_client.publish(mqtt_topic_pub, '{"auto": false, "speed": ' + target_fan_speed + '}');
+    save_target_values();
     res.status(200).send('OK');
+}
+
+
+// save target values to database
+function save_target_values() {
+    // open database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+        if (err) {                                                                                  // catch errors
+            return console.error(err.message);
+        }
+    });
+
+    db.run('UPDATE target_values SET value = ' + target_pressure + ' WHERE id = "pressure";', function(err) {
+        if (err) {                                                                              // catch errors
+            return console.log(err.message);                                                    // log
+        }
+    });
+    
+    db.run('UPDATE target_values SET value = ' + target_fan_speed + ' WHERE id = "fan_speed";', function(err) {
+        if (err) {                                                                              // catch errors
+            return console.log(err.message);                                                    // log
+        }
+    });
+
+    // close the database connection
+    db.close((err) => {                                                                             // close database connection
+        if (err) {                                                                                  // catch errors
+            res.status(500).send('Internal Error');                                                 // send error information to client
+            return console.error(err.message);                                                      // log
+        }
+    });
 }
 
 
@@ -552,10 +608,10 @@ function send_target_fan_speed(req, res, next, value) {
 GET CURRENT MODE
 ******************************************************************************************/
 
-var cur_mode = '1';
+var cur_mode = 1;
 
 function get_mode(req, res, next) {
-    res.status(200).send(cur_mode);
+    res.status(200).send(cur_mode.toString());
 }
 
 
@@ -568,6 +624,7 @@ SET CURRENT MODE
 function set_mode(req, res, next, mode) {
     if(mode == 0 || mode == 1) {
         cur_mode = mode;
+        save_mode();
         res.status(200).send('OK');
     } else {
         res.status(400).send('Bad request')
@@ -575,6 +632,72 @@ function set_mode(req, res, next, mode) {
 }
 
 
+// save current mode to database
+function save_mode() {
+    // open database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+        if (err) {                                                                                  // catch errors
+            return console.error(err.message);
+        }
+    });
+
+    db.run('UPDATE target_values SET value = ' + cur_mode + ' WHERE id = "mode";', function(err) {
+        if (err) {                                                                              // catch errors
+            return console.log(err.message);                                                    // log
+        }
+    });
+
+    // close the database connection
+    db.close((err) => {                                                                             // close database connection
+        if (err) {                                                                                  // catch errors
+            res.status(500).send('Internal Error');                                                 // send error information to client
+            return console.error(err.message);                                                      // log
+        }
+    });
+}
+
+
+// initialize target_pressure, target_fan_speed and mode
+function init_target_values() {
+    // open database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+        if (err) {                                                                                  // catch errors
+            return console.error(err.message);
+        }
+    });
+
+    // fetch all cars
+    db.serialize(() => {
+        db.each(`SELECT id as id, value as value FROM target_values`, (err, row) => {
+            if (err) {                                                                              // catch errors
+                console.error(err.message);                                                         // log
+            }
+            
+            if(row.id == "pressure") {
+                target_pressure = row.value;
+            } else if(row.id == "fan_speed") {
+                target_fan_speed = row.value;
+            } else if(row.id == "mode") {
+                cur_mode = row.value;
+            }
+        });
+    });
+
+    // close the database connection
+    db.close((err) => {                                                                             // close database connection
+        if (err) {                                                                                  // catch errors
+            res.status(500).send('Internal Error');                                                 // send error information to client
+            return console.error(err.message);                                                      // log
+        }
+        
+        if(cur_mode) {
+            mqtt_client.publish(mqtt_topic_pub, '{"auto": false, "speed": ' + target_fan_speed + '}');
+        } else {
+            mqtt_client.publish(mqtt_topic_pub, '{"auto": true, "pressure": ' + target_pressure + '}');
+        }
+    });
+}
+init_target_values();
 
 
 /******************************************************************************************
