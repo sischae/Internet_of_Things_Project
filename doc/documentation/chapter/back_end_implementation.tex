@@ -1,6 +1,8 @@
 \chapter{Back end implementation}
 \label{ch:back_end_implementation}
 
+The server provides users with all necessary information for using the web interface. It serves requested web pages and data in general but also establishes the connection to an IoT device and stores different kinds of data consistently. The server's functionality is implemented in a central JavaScript file, the \textit{server.js}.
+
 
 
 
@@ -11,6 +13,18 @@
 \section{Global database}
 \label{sec:global_database}
 
+The server uses an SQLite database which is set up as a single global database to store all kinds of data.  The database (\textit{/src/data/data.db}) contains the following five tables to store data:
+
+\begin{lstlisting}[language = SQL, numbers = none]
+ CREATE TABLE users(username TEXT, hash TEXT, timestamp INT, role TEXT);
+ CREATE TABLE log_users(timestamp INT, user TEXT);
+ CREATE TABLE pressure(timestamp INT, pressure INT);
+ CREATE TABLE fan_speed(timestamp INT, fan_speed INT);
+ CREATE TABLE target_values(id TEXT, value INT);
+\end{lstlisting}
+
+The \textit{users} table contains the login information about all registered users while \textit{log\_users} keeps track of all login activities which is described separately in section \ref{sec:authentication_and_authorization}. On the other hand, \textit{pressure} and \textit{fan\_speed} are tables for data logging only. These tables store all sensor data received from the ventilation controller. The \textit{target\_values} table contains the current values of the target speed and target pressure requested by the user as well as the current mode of the system (see chapter \ref{sec:data_transfer} for more information).
+
 
 
 
@@ -20,6 +34,16 @@
 
 \section{Routing}
 \label{sec:routing}
+
+The server uses Express to manage the routing. To prevent unauthenticated users from accessing data, every route refers to the \textit{auth\_user(req, res, next, redirect, arg\_dyn = ' ')} function to authenticate users and to check their permissions (chapter \ref{sec:authentication_and_authorization}.) The following example shows the routing for \textit{/control\_panel}:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ app.get('/control_panel', async (req, res, next) => {
+ 		auth_user(req, res, next, 'control_panel');
+ });
+\end{lstlisting}
+
+In this example, the server will pass all necessary parameters for authenticating the user and returning a response as well as the information about which route was called. If the user is logged in, the server will render the \textit{/src/views/control\_panel.ejs} file as a response and return it to the client.
 
 
 
