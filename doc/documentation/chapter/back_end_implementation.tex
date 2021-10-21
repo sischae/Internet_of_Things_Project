@@ -126,20 +126,56 @@ The server sends those status codes alongside the resulting data or message. The
 \section{Settings functionality}
 \label{sec:settings_functionality}
 
+The settings page of the web interface displays the users' login activity and provides a form for changing the password. If the user has admin privileges, the login activity of all users will be displayed. Also, admins can add a new user to the system by entering a new username and password in the provided form.
+
+The server needs to check permissions and send only the data the client is allowed to see. It must also tell the client to enable and disable the form for adding a new user depending on the users' permissions. Also, the server must always check permissions before adding a new user to the system even if the form is disabled because attackers could active the form manually or send custom requests to the server telling it to create new users.
+
 
 
 \subsection{Changing the password}
 \label{subsec:changing_the_password}
+
+Each users' password is saved as a hashed value in the database. If a user sends a request to change the password, the server first needs to generate a new hash using a PBKDF2 function. The server uses the username as the salt parameter and generates a 64-bit hash by iterating 10.000 times:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, key) => {
+ 		if (err) throw err; 
+ 		
+ 		let hash = key.toString('hex');
+ 		change_password(req, res, next, username, hash);                      
+ });
+\end{lstlisting}
+
+After a new hash has been generated, the server connects to the database and updates the current users' entry in the \textit{users} table by replacing the old hash with the new one. It is important, to catch errors while generating the hash and updating the database. The user might be unable to log back into the interface if the system suggests that a new password has been set successfully but hasn’t To prevent this, the server will respond with an internal error code to the client. This will trigger an alert telling the user that something went wrong. If the password was changed successfully, the server responds with a status 200 (OK). The client will display an alert to confirm to the user, that his password has been updated.
 
 
 
 \subsection{Adding a new user}
 \label{subsec:adding_a_new_user}
 
+Adding a new user works quite similarly to changing a password, but this is allowed to users with admin privileges only. The server checks the users' permission (chapter \ref{subsec:user_authorization}) and generates a new hash just as described in chapter \ref{subsec:changing_the_password} with the difference that the hash is being generated based on the passes parameters (username, password) instead of the current users' credentials. After generating the has, the server adds a new entry to the \textit{users} table of the database with the new username and hash. The server then returns a response with a status code to tell the client if the requested action could be performed successfully.
+
 
 
 \subsection{Login activity}
 \label{subsec:login_activity}
+
+If the client sends a request to fetch all login activities, the server first checks whether the user has admin privileges or not. If the user is an admin, the server simply reads and returns all entries from the \textit{log\_users} table of the database. If the user is not authorized to see all users' login activity, the server selects only the current users' entries from the database:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ db.each(`SELECT * FROM log_users WHERE user = "` + user + `"`, (err, row) => {
+ 		if (err) {   
+ 			console.error(err.message);                                                              
+ 		}
+                
+ 		let time = new Date(row.timestamp)
+ 		let time_formatted = time.toLocaleString();
+ 		log.push({"timestamp":time_formatted + ': ',"user":row.user});
+ });
+\end{lstlisting}
+
+Each entry read gets added to a JSON array with its' timestamp being formatted to a readable format. After all the entries have been read, the JSON array will be returned to the client as the response.
+
 
 
 
