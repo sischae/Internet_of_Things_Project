@@ -733,6 +733,8 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
         var username = auth[0];
         var password = auth[1];
         
+        console.log(username + ' - ' + password);
+        
         // generate and compare hashes
         crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, derivedKey) => {
             if (err) throw err;                                                                                 // catch errors
