@@ -1,6 +1,14 @@
 \chapter{Front end implementation}
 \label{ch:front_end_implementation}
 
+As the back end implementations' main task is to provide functionality, the front end implementation also needs to consider the design and usability of the interface. It is important to have a clear and consistent design on all pages. Also, the menu and every other way of providing user inputs need to be intuitive and consistent in terms of the design. 
+
+To keep a consistent design, the interface uses two basic colors - a dark gray (\textcolor{ventpro_gray}{\#262626}) and a light blue (\textcolor{ventpro_blue}{\#90fbff}) as a contrast color. Those two colors are used on all pages.
+
+To make the interface as intuitive as possible, the menu, amount of pages, and amount of possible interactions are kept on a very basic level. The goal was to provide everything needed in a most simple and usable way to the user. For example: Even if the control panel could be split up into multiple subpages displaying the pressure and fan speed separately or having a single page for setting new target values, all those functionalities are integrated on one page on purpose.
+
+In general, all positioning has been done using flexboxes and the design as well as some animations are done using custom CSS.
+
 
 
 
@@ -11,6 +19,12 @@
 \section{Responsive header and navigation menu}
 \label{sec:responsive_header_and_navigation_menu}
 
+The navigation menu is a central element of the web interface that is consistent on all pages and allows the user to navigate between the different subpages. The header needs to directly indicate what kind of interface the web page is and what options the user has. To do so, the header displays an animated fan next to the interfaces’ title VentPro in the top left corner of the page. On the right side of the header, the navigation menu displays all available sub-pages with an intuitive icon next to each text.
+
+As the whole interface needs to be responsive and can be used both on desktop computers and mobile devices, this also applies to the header. Depending on the current window size of the browser, the header adjusts its' width automatically. As the width is being reduced, the interface will first hide the texts of the navigation menu to reduce the required space. The text is being hidden instead of the icons because icons require way less space and are very intuitive as well. If the width is being reduced even more, the "VentPro" text will disappear as well. The rotating fan will always be displayed. This responsiveness is realized using the CSS \textit{media screen}. The limiting values have been deduced by testing multiple values. The elements are now being hidden perfectly right before clashing into another element.
+
+Apart from making the header responsive, it is also important to indicate which page is currently loaded in a nice way. To do so, the current pages' text and item in the navigation menu will be highlighted by displaying both in the blue contrast color while all other elements are colored white.
+
 
 
 
@@ -20,6 +34,10 @@
 
 \section{Help page}
 \label{sec:help_page}
+
+It is indispensable to provide simple instructions on how to use the web interface on the interface itself. A user should not need to reach out to the user manual but should be able to find all necessary explanations on an integrated help page. The help page provides information about both the control panel and the settings page and gives answers to typical questions.  Displaying questions with their answers makes it way easier for the user to find a solution for a problem than just giving a large set of instructions.
+
+At the top of the page, the user can directly navigate between the different sections or open the official user manual.  To increase usability, the answers are not being displayed instantly. Instead, answers can be displayed by clicking any of the listed questions.  Using an accordion-like CSS transition, answers will blend in smoothly right underneath the selected question. 
 
 
 
