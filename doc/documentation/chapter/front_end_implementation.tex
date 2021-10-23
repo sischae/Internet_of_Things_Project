@@ -7,7 +7,7 @@ To keep a consistent design, the interface uses two basic colors - a dark gray (
 
 To make the interface as intuitive as possible, the menu, amount of pages, and amount of possible interactions are kept on a very basic level. The goal was to provide everything needed in a most simple and usable way to the user. For example: Even if the control panel could be split up into multiple subpages displaying the pressure and fan speed separately or having a single page for setting new target values, all those functionalities are integrated on one page on purpose.
 
-In general, all positioning has been done using flexboxes and the design as well as some animations are done using custom CSS.
+In general, all positioning has been done using flexboxes which also makes it easy to make the interface responsive. The design as well as some animations are done using custom CSS.
 
 
 
@@ -49,37 +49,79 @@ At the top of the page, the user can directly navigate between the different sec
 \section{Control panel}
 \label{sec:control_panel}
 
-The control panel allows the user two switch between automatic and manual mode. In automatic mode, the user can set a target pressure while the target fan speed can be set in manual mode only. Depending on the active mode, the input elements will be activated/deactivated.  Also, if a mode is inactive, its' panel will be displayed with reduced opacity and a blur filter. These effects will be removed on activation. The mode is stored on the server to prevent clients from sending requests of different modes at the same time. The whole system is either in automatic mode or in manual mode. After loading the control panel page, the client will fetch the current mode from the server and activate the correct control panel depending on the response. If the user switches modes, the client will send a post request to the server to change the global mode. If the server responds with a status 200 (OK), the client switches its' local mode and activates the other control panel.
+The control panel allows the user to switch between automatic and manual mode. In automatic mode, the user can set a target pressure between 0Pa and 120Pa. The ventilation system will automatically adjust the current fan speed depending on the requested target pressure. In manual mode on the other hand, the target fan speed can be set to a value between 0\% and 100\%. The ventilation will set the current fan speed to the requested value no matter the pressure. 
 
-Besides the input elements to set target values, the control panel displays a plot of current sensor data both for current pressure and fan speed (chapter \ref{sec:display_control_panel}). The panel also displays three buttons to display data of different time intervals. Clicking on a button will trigger an event listener. The event listener will request a set of data from the server, change some parameters of the plot depending on how the data should be displayed, and setting up different ways of handling new incoming data.
+Depending on the active mode, the input elements will be activated/deactivated (chapter \ref{subsec:activating_and_inactivating_the_panels}). The system is either in automatic or manual mode and the user can set the target values of the current mode only.  The mode can be changed using the switch displayed at the top of the control panel (chapter \ref{subsec:switching_the_mode}). After loading the control panel page, the client will fetch the current mode from the server and activate the correct control panel depending on the response. 
+
+Besides the input elements to set target values, the control panel displays a plot of current sensor data both for current pressure and fan speed (chapter \ref{subsec:plotting_the_data}). As well as three buttons to select data of different time intervals. 
 
 
 
 \subsection{Activating and inactivating the panels}
 \label{subsec:activating_and_inactivating_the_panels}
 
+Depending on the current mode, only one of the two panels is active. The other one should still display the current sensor data,  but the user should not be able to change any settings for that mode while it is inactive. Apart from disabling user inputs, the design of the inactive panel should change to clearly indicate to the user that it can not be used at the moment.
+
+To disable all user inputs, the flexbox contains an overlay with the same dimensions and a transparent body. Setting the z-index of the overlay to a higher value will display it above the flexbox disabling the user to click any of the elements below.  To activate the panel, the overlay is being hidden which makes the elements underneath accessible again.
+
+\newpage
+To indicate that a panel is inactive, some filters are being applied to the panels' flexbox:
+
+\begin{lstlisting}[language = HTML, numbers = none]
+ document.getElementById('control_manual').style.opacity =  0.5;
+ document.getElementById('control_manual').style.webkitFilter = "blur(1px)";
+\end{lstlisting}
+
+Reducing the opacity will fade out the panel to a percentage of 50\%. Adding a blur effect then gives the final touch to make the panel look like it can not be used at the moment. Changing the values of the effects applied could increase the effect, but would also make the plot illegible. The chosen fulfill both requirements nicely. To reactivate a panel, the client just resets the opacity to 100\% and clears the blur effect.
+
+By default, both panels are disabled. Once the page is loaded, the client will fetch the current mode from the server. Depending on the response, one of the panels will get activated. This is essential because enabling the panels by default would allow the user to send invalid requests to the server while the client is fetching the current mode. 
+
 
 
 \subsection{Switching the mode}
 \label{subsec:switching_the_mode}
+
+The mode is stored on the server to prevent clients from sending requests of different modes at the same time.  After loading the page, the client will initially fetch the current mode from the server, set the switch to the correct position and enable the active panel.
+
+If the user switches modes, the client will send a post request to the server to change the global mode. If the server responds with a status 200 (OK), the client switches its' local mode and activates the other control panel. Otherwise, the switch will not be set and the other panel will remain inactive.
+
+As the mode should not only be changed on the web interface and the server, but also at the ventilation system itself, the client also needs to send a command to the IoT device. If the mode got changed, the client will send a POST request with the current target value for either the pressure or fan speed to the server. The server will then pass the command to the IoT device via MQTT (chapter \ref{subsec:sending_commands}).
 
 
 
 \subsection{Plotting the data}
 \label{subsec:plotting_the_data}
 
+To display sensor data on the control panel, the client generates two plots, one for pressure and one for fan speed data. The free open-source library Chart.js can be used to plot data in a lot of ways. In this case, basic lined plots will show the pressure and fan speed over time.  The parameters of the plots can easily be adjusted to fit the given range of 0-120Pa for displaying the pressure and 0-100\% for displaying the fan speed. The x-axis will automatically be labeled depending on the data that gets assigned to it. To display the timestamps in a readable format, the values get formatted manually before assigning them to the plot. Depending on the selected time interval, the plot will either show a date or a day time for each data point.
+
+Apart from setting the correct range and labeling the axes, some design adjustments were made as well. To stick with the consistent design of the interface, the color of the plots has been set to the general blue highlight color. To improve readability, a slightly darker version of the same base color has been chosen which is still noticeable on disabled panels. To keep the nice and clean design even if huge sets of data are loaded, the circle radius of the single data points has been reduced. Also, the tension parameter of the plots has been set to 0.4. This causes the client to calculate a smooth interpolation between the single data points. Interpolation makes it easier to see the reaction of the ventilation system and looks more realistic than linear interpolation.
+
+
 
 \subsubsection{Fetching data of the selected interval}
 \label{subsec:fetching_data_of_the_selected_interval}
+
+After loading the control panel or after the user selected a different time interval (chapter \ref{subsec:selecting_different_time_intervals}) the client needs to fetch a set of data that should be displayed in the plot. To do so, an HTTP GET request is being sent to the server. The request includes information about the time interval as well as the requested kind of data. By requesting the sensor data for the pressure and fan speed separately, the traffic is being reduced and the overall performance is being improved. The data is being returned as a JSON array. After receiving the data, the client parses the data points and their associated timestamps to the plot by overwriting the former dataset.
 
 
 \subsubsection{Receiving and displaying live data}
 \label{subsec:receiving_and_displaying_live_data}
 
+While datasets for the plots are being fetched after loading the control panel or selecting a different time interval, live data needs to be added to the plot frequently. As described in chapter \ref{subsec:communication_between_the_server_and_the_client},  live data is being passed to the client via WebSocket messages as soon as they get received. 
+
+The client reacts to every incoming message and checks if valid sensor data has been received. Then, the data is being extracted and added to the plots dataset. After refreshing the plot using the Chart.js function \textit{plot.update()}, the new data point will get added to the plot. This procedure is being done for both plots as every message contains a current value for both pressure and fan speed. 
+
+Also, after receiving a new message, the current values will be displayed as a number above the plots. Appending the current value to the title of the plot is a convenient way to display the current state. This makes it easier for the user to read the current values than hovering over the latest data point in the plot.
+
 
 \subsubsection{Selecting different time intervals}
 \label{subsec:selecting_different_time_intervals}
 
+Each panel provides three buttons to choose between different intervals of time depending on what data should be displayed. Clicking on a button will trigger an event listener. The event listener will request a set of data from the server and convert the timestamps into the correct format.
+
+Depending on the selected time interval, the x-axis of the plots will either show a date (\textit{DD.MM.YYYY}) or a day time (\textit{HH:MM:SS}) for each data point. The dataset returned by the server contains timestamps in milliseconds since 01.01.1970 00:00:00 UTC. If the selected time interval is "\textit{all}", the timestamps will be displayed as dates. If "\textit{today}" or "\textit{last minute}" has been selected as the interval, the time of the measurement will be displayed instead. Both conversions are done using custom date prototypes that can be applied to a given date object.
+
+After a new time interval has been selected, an indicator is being set to keep track of the current settings. This allows the client, to correctly format timestamps of the incoming live data before adding it to the plot.
 
 
 \subsection{Setting the target pressure and target fan speed}
