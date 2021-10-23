@@ -187,32 +187,113 @@ Each entry read gets added to a JSON array with its' timestamp being formatted t
 \section{Data transfer}
 \label{sec:data_transfer}
 
+The system requires different kinds of communication. First, the IoT device needs to send sensor data to the server which then logs and saves this data. But the data must also be sent to the client on request. Also, the client needs to be able to request a new target pressure or fan speed by sending a request to the server. The server then has to pass this request to the IoT device.
+
+While some of the messages are being sent frequently, some are not. To deal with those requirements, three kinds of communication are used in this system: MQTT, WebSocket, and basic HTTP requests.
 
 
-\subsection{MQTT}
-\label{subsec:mqtt}
+
+\subsection{Communication between the oT device and the server}
+\label{subsec:communication_between_the_iot_device_and_the_server}
+
+MQTT is a messaging protocol designed for IoT applications and uses a separate MQTT broker to pass messages between clients. MQTT uses a publish/subscribe system to transport data.
+
+The IoT device connects to the broker, publishes messages on a topic to send sensor data to the server, and subscribes to a different topic to receive commands sent by the user. The server on the other hand subscribes to the sensor data topic and publishes commands on the second topic.
+
+By default, the system uses the topic \textit{controller/status} to pass sensor data. Once subscribed to the topic, the serve initializes an event handler on all incoming messages. Messages on that topic are being sent in the following format:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ {"nr":1, "speed":31, "setpoint":10, "pressure":10, "auto":true, "error":false}
+\end{lstlisting}
+
+Once a new message is being received, the event handler triggers and stores the received data in the database. To enable the server to serve a set of sensor data for pressure or fan speed only in a fast way, those sets of data are being stored in separate tables (chapter \ref{sec:global_database}).
 
 
 
-\subsection{WebSocket}
-\label{subsec:websocket}
+\subsection{Communcation between the server and the client}
+\label{subsec:communication_between_teh_server_and_the_client}
+
+While HTTP requests are a great way to send a single set of data as a response to a single request, this is not very convenient for sending data on a frequent basis.
+
+WebSocket is a communication protocol providing full-duplex communication between a server and one or several clients. Using WebSocket, the client can establish a communication channel to the server. Data can be sent in both directions at all times and by setting up event listeners, both the server and the client can also react to received messages at all times.
+
+If the client needs a set of sensor data to display on the control panel, it fetches the data using an HTTP request and receives a single set of data in return. But for showing live data (section\ref{subsec:live_data}) or displaying warnings (chapter \ref{subsec:warnings}), the system uses WebSocket communication.
 
 
 \subsubsection{Data minimization}
 \label{subsec:data_minimization}
 
+Every time a user loads the control panel page of the web interface, the client fetches a set of data to plot for both pressure and fan speed. By default, the control panel plots an all-time chart of the data. As the IoT device publishes data every few seconds, the server has a huge set of data stored in its' database. Returning a set of data with many thousands of entries not only results in an unpleasantly long loading time but also has an enormously bad impact on the performance of the control panel itself. Life data would be displayed in a laggy way, the control panel would react very slowly to any user input, and resizing the browsers' window could even trigger freezes.
+
+To get rid of this problem, the server reduces traffic and improves the interface performance by shortening the set of data each time before returning it to the client. This does not affect the data stored in the database but only the data being displayed on the control panel. \\
+
+The sensor data is being read and returned as a JSON array. By testing several array sizes it turned out that arrays with up to 1.000 entries each do not affect the loading time or performance in a critical way but still allow the plots to display data in a smooth way.  Therefore, each set of data read from the database is being shortened before being returned to the client using the following function.
+
+\begin{lstlisting}[language = Java, numbers = none]
+ function shorten_array(arr) {
+ 		let res = arr;
+ 		let comp = arr;
+ 		while(res.length > 1000) {
+ 				res = [];
+ 				let idx = 0;
+ 				for(let i = 0; i < comp.length; i++) {
+ 						res[idx] = comp[i];
+ 						idx++;
+ 						i++;
+ 				}
+ 				comp = res;
+ 		}
+ 		return res;
+ }
+\end{lstlisting}
+
+This function checks the length of the initial array read from the database. If the array contains more than 1.000 entries, each second element is being dropped and the remaining elements form the new array. This procedure gets repeated as long as the resulting array still has more than 1.000 elements. In the end, the resulting array has between 500 and 1.000 elements. This array will then get returned to the client and the data contained will be displayed on the control panel afterward. 
+
 
 \subsubsection{Live data}
 \label{subsec:live_data}
+
+While the user is using the control panel, all sensor data that is currently being received should automatically be added to the plots. The user should be able to see live data all the time.
+To do so,  data gets send using the WebSocket connection. Each time a user establishes a WebSocket connection to the server, a new MQTT subscriber is being set up to listen to all incoming messages containing sensor data. Every time an MQTT message is being received, the pressure, setpoint, fan speed, and error parameters will immediately get passed to the client via WebSocket. This ensures that the server provides the most current sensor data to the client all the time without sending unnecessary requests or data in between.
 
 
 \subsubsection{Warings}
 \label{subsec:warnings}
 
+If the client sets the target pressure to a value that could not be reached in a reasonable time, the IoT device will indicate that by setting the error bit in the data messages sent via MQTT. If this happens, the system needs to tell the user by displaying a warning on the web interface.
+
+While the user is using the control panel, the error indicator is automatically being passed to the client alongside the sensor data (chapter \ref{subsec:live_data}) but this data is not being sent if the user is using another interface page. To do so, the client establishes a WebSocket communication to the server on the other interface pages as well indicating that only errors and no sensor data should be sent. The server then again sets up an MQTT subscriber on all incoming messages but the event listener will only pass the error indicator to the client to reduce traffic.\\
+
+Another problem is, that the IoT device keeps sending errors until the target pressure is reached. This could either happen after some more time or after the user has set a new, reachable target pressure. As the server should not send multiple error messages to the client that would trigger an alert each time a new set of sensor data is being received, some kind of filter is essential.
+
+To do so, the server sets a bit indicating if the error bit was set in the last message received. This allows the server to recognize new errors. If a new error is being received, the error gets passed to the client. Otherwise, the error bit of the WebSocket message will be set to \textit{false} even if the error is still active. The client will then only display an alert once per each new error.
+
 
 \subsubsection{Sending commands}
 \label{subsec:sending_commands}
 
+Next to receiving data, the client also needs to be able to send commands to the IoT device to set a new target pressure or fan speed. As this command is only being sent once in a while, the client does not send this command via the established WebSocket connection but using a basic HTTP POST request. The server then passes this command to the IoT device by publishing a message on the \textit{controller/settings} topic in one of the following formats:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ {"auto": true, "pressure": 30}
+ {"auto": false, "speed": 60}
+\end{lstlisting}
+
+If the client requested a specific target pressure, the \textit{auto} bit will be set to \textit{true} to indicate that the system needs to run in automatic mode. If a target fan speed is being requested, the manual mode is active which will be indicated by setting the \textit{auto} bit to \textit{false}. After sending the command, the IoT device should immediately react by adjusting the current fan speed and mode depending on the new parameters.
+
+
 
 \subsubsection{Storing identifiers}
 \label{subsec:storing_identifiers}
+
+Depending on the current state of the system, different values for mode, target pressure, and target fan speed are currently set. To automatically display the correct values on the control panel, the server needs to keep track of those parameters. Each time a user switches the mode or sets a new target value, the server stores this value into a variable. While loading the control panel, the client can then fetch this data and display the current state instantly.
+
+The current state must be persistent and independent of reloading the web interface, connecting from different user accounts, or even server restarts. To retain the current state even after a server restart, this data needs to be stored in the \textit{target\_values} table of the database (chapter \ref{sec:global_database}). The table contains a set of data indicating the current mode, target pressure, and target fan speed in the following format:
+
+\begin{lstlisting}[language = SQL, numbers = none]
+ {"id": "pressure", "value": 30}
+ {"id": "fan_speed", "value": 60}
+ {"id": "mode", "value": 0}
+\end{lstlisting}
+
+On startup, the server will initially load those entries from the database to return this data on clients' requests.
