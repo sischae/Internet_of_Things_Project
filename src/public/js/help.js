@@ -68,7 +68,7 @@ var last_err = false;
 
 ws_client.onopen = () => {
     
-    ws_client.send('connect_help');                                                                                           // connect as control panel
+    ws_client.send('connect_help');                                                                     // connect as control panel
     
     ws_client.onmessage = (message) => {
         let msg = JSON.parse(message.data);
