@@ -15,6 +15,8 @@ The following packages are necessary to run the code. Install packages using "np
   - body-parser
   - sqlite3
   - ws  
+
+Further information about setting up the server can be found at chapter 1.1 Installation of the [Technical Documentation](https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf).
   
 ## Usage
 
