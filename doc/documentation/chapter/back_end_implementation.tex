@@ -1,0 +1,299 @@
+\chapter{Back end implementation}
+\label{ch:back_end_implementation}
+
+The server provides users with all necessary information for using the web interface. It serves requested web pages and data in general but also establishes the connection to an IoT device and stores different kinds of data consistently. The server's functionality is implemented in a central JavaScript file, the \textit{server.js}.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Global database
+%--------------------------------------------------------------------------------------------------
+
+\section{Global database}
+\label{sec:global_database}
+
+The server uses an SQLite database which is set up as a single global database to store all kinds of data.  The database (\textit{/src/data/data.db}) contains the following five tables to store data:
+
+\begin{lstlisting}[language = SQL, numbers = none, label={lst:global_database}]
+ CREATE TABLE users(username TEXT, hash TEXT, timestamp INT, role TEXT);
+ CREATE TABLE log_users(timestamp INT, user TEXT);
+ CREATE TABLE pressure(timestamp INT, pressure INT);
+ CREATE TABLE fan_speed(timestamp INT, fan_speed INT);
+ CREATE TABLE target_values(id TEXT, value INT);
+\end{lstlisting}
+
+The \textit{users} table contains the login information about all registered users while \textit{log\_users} keeps track of all login activities which is described separately in section \ref{sec:authentication_and_authorization}. On the other hand, \textit{pressure} and \textit{fan\_speed} are tables for data logging only. These tables store all sensor data received from the ventilation controller. The \textit{target\_values} table contains the current values of the target speed and target pressure requested by the user as well as the current mode of the system (see chapter \ref{sec:data_transfer} for more information).
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Routing
+%--------------------------------------------------------------------------------------------------
+
+\section{Routing}
+\label{sec:routing}
+
+The server uses Express to manage the routing. To prevent unauthenticated users from accessing data, every route refers to the \textit{auth\_user(req, res, next, redirect, arg\_dyn = ' ')} function to authenticate users and to check their permissions (chapter \ref{sec:authentication_and_authorization}.) The following example shows the routing for \textit{/control\_panel}:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ app.get('/control_panel', async (req, res, next) => {
+ 		auth_user(req, res, next, 'control_panel');
+ });
+\end{lstlisting}
+
+In this example, the server will pass all necessary parameters for authenticating the user and returning a response as well as the information about which route was called. If the user is logged in, the server will render the \textit{/src/views/control\_panel.ejs} file as a response and return it to the client.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Authentication and authorization
+%--------------------------------------------------------------------------------------------------
+
+\section{Authentication and authorization}
+\label{sec:authentication_and_authorization}
+
+Authentication and authorization are both very important for this interface. Only logged-in users are allowed to open the page. Also, not every logged-in user has permission to use all available features. Therefore, on each request a client sends, the server will try to authenticate the user before providing any information. In this project, basic HTTP authentication is used to log in/log out users.\\
+
+
+
+\subsection{Front end authentication}
+\label{subsec:front_end_authentication}
+When a user initially connects to the web interface, the server will return a 401 error code and ask for authentication. The browser will automatically show a form and ask the user to enter a username and a password. If the entered credentials are correct, the server will redirect to the landing page.
+
+Every page of the interface provides a log-out button, which enables the user to manually log out. 
+If a user logs out, the client will first send a basic get request to log out from the server. Then, the client sends an invalid authentication request and redirects to the logout page.
+Sending a separate logout request before the invalid authentication enables the server to tell apart the logout request from any other invalid authentication like logging in with incorrect credentials. This is important to keep track of the users that are currently logged in and can be used to log all login activities.
+
+
+
+\subsection{User database}
+\label{subsec:user_database}
+
+The \textit{users} table of the central database is used to store the login information of all users (chapter \ref{lst:global_database}). Next to the username and the hashed password, the table contains a timestamp of the users' last login (in milliseconds since 01.01.1970 00:00:00 UTC) as well as a role. The timestamp can be used to distinguish new logins and navigation between different subpages , but also for logging all login activities on the server (chapter \ref{subsec:user_authentication}). The role indicates whether the user has admin privileges or not.
+
+
+
+\subsection{Routing}
+\label{subsec:routing}
+All routes that the server handles require the client to authenticate before serving any page or data. The only exception to this is the \textit{/logout} route, that returns the \textit{views/logout.ejs} file to the client without authentication. All other routes call the function \textit{auth\_user(req, res, next, redirect)} (chapter \ref{subsec:user_authentication}) and pass a string of the requested redirect as a parameter. The function will check the authentication parameters provided by the client. If the provided information is valid, the function will call the requested function and return information to the client.
+
+
+
+\subsection{User authentication}
+\label{subsec:user_authentication}
+If a route is called by a client, it will call the \textit{auth\_user(req, res, next, redirect)} function with information about the requested service.  The function reads authorization parameters from the request body and checks if valid data was received. If so, the function generates a hash based on the provided username and password and compares it with the hashes stored in the database. If the username and password match the information in the database, the user is authenticated successfully.
+If a client was successfully authenticated, the function checks if the request was a new login or just an authenticated request for a page or service.  To do so, the current time is being compared to the users' timestamp in the database. Three cases can be detected that way:
+
+\begin{itemize}
+  \item[$\bullet$] If the timestamp equals zero, it either is still zero from its first initialization or has been reset during a logout procedure. Therefore, the client is performing a new login. Then, the login will get logged and the timestamp in the users' database entry will get updated.
+  \item[$\bullet$] If the difference between the current time and the timestamp of the users' last login is greater than 30 minutes, the request will be interpreted as a new login.  Then, the login request will get logged and the timestamp in the users' database entry will get updated.
+  \item[$\bullet$]  If the difference between the current time and the timestamp of the users' last login is less than 30 minutes, the request will be interpreted as a request for changing the page or fetching data. The timestamp will not get updated and the request will not get logged in the database.
+\end{itemize}
+
+After detecting a new login by checking the conditions explained above, the server will add a new row to the \textit{log\_users} table (chapter \ref{lst:global_database}) with a current timestamp and the current username.
+
+After deciding, if the database needs to get updated because of a new login, the function switches depending on the passed \textit{redirect} parameter. If a page is requested, the parameter will directly include the filename of the page that should be rendered. Otherwise, the corresponding function will get called to perform actions and return the requested data to the client.
+
+
+
+\subsection{User authorization}
+\label{subsec:user_authorization}
+Users are allowed to use most of the features provided by the web interface. Still, some actions can get performed by authorized users only.  For example, only admins are allowed to add a new user to the system or to see all users' login activity. As described in chapter \ref{subsec:user_database}, the \textit{users} database has an attribute that tells the role of each user. There are two roles, the \textit{default} and the \textit{admin} role.
+If the client requests a service that is available to admins only, or that returns different results depending on the users' role, the \textit{auth\_user()} function will pass the current users' role as an argument to the function, that performs the requested actions. Then, the server decides if the user is authorized or not. In general, the server returns one of the following status codes on requests that require specific privileges.
+
+\begin{center}
+	\begin{tabular}{>{\RaggedRight\arraybackslash}p{2em}>{\RaggedRight\arraybackslash}p{5em}>{\RaggedRight\arraybackslash}p{28em}}
+	 	200 & 'OK' & The requested action was successfully executed  \\ [0.5ex] 
+	 	\hline& \\[-3ex]
+	 	403 & 'Forbidden' & The user has no permission to execute the requested action \\ [0.5ex] 
+	 	\hline & \\[-3ex]
+ 		409 & 'Conflict' & The action could not be executed because of conflicting arguments
+	\end{tabular}
+\end{center}
+
+The server sends those status codes alongside the resulting data or message. Then, the client deals with received data, takes the user to a different page, or displays an alert depending on the result.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Settings functinoality
+%--------------------------------------------------------------------------------------------------
+
+\section{Settings functionality}
+\label{sec:settings_functionality}
+
+The settings page of the web interface displays the users' login activity and provides a form for changing the password. If the user has admin privileges, the login activity of all users will be displayed. Also, admins can add a new user to the system by entering a new username and password in the provided form.
+
+The server needs to check permissions and send only the data the client is allowed to see. It must also tell the client to enable and disable the form for adding a new user depending on the users' permissions. Also, the server must always check permissions before adding a new user to the system even if the form is disabled because attackers could active the form manually or send custom requests to the server telling it to create new users.
+
+
+
+\subsection{Changing the password}
+\label{subsec:changing_the_password}
+
+Each users' password is saved as a hashed value in the database. If a user sends a request to change the password, the server first needs to generate a new hash using a PBKDF2 function. The server uses the username as the salt parameter and generates a 64-bit hash by iterating 10.000 times:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, key) => {
+ 		if (err) throw err; 
+ 		
+ 		let hash = key.toString('hex');
+ 		change_password(req, res, next, username, hash);                      
+ });
+\end{lstlisting}
+
+After a new hash has been generated, the server connects to the database and updates the current users' entry in the \textit{users} table by replacing the old hash with the new one. It is important, to catch errors while generating the hash and updating the database. The user might be unable to log back into the interface if the system suggests that a new password has been set successfully but hasn’t To prevent this, the server will respond with an internal error code to the client. This will trigger an alert telling the user that something went wrong. If the password was changed successfully, the server responds with a status 200 (OK). The client will display an alert to confirm to the user, that his password has been updated.
+
+
+
+\subsection{Adding a new user}
+\label{subsec:adding_a_new_user}
+
+Adding a new user works quite similarly to changing a password, but this is allowed to users with admin privileges only. The server checks the users' permission (chapter \ref{subsec:user_authorization}) and generates a new hash just as described in chapter \ref{subsec:changing_the_password} with the difference that the hash is being generated based on the passes parameters (username, password) instead of the current users' credentials. After generating the has, the server adds a new entry to the \textit{users} table of the database with the new username and hash. The server then returns a response with a status code to tell the client if the requested action could be performed successfully.
+
+
+
+\subsection{Login activity}
+\label{subsec:login_activity}
+
+If the client sends a request to fetch all login activities, the server first checks whether the user has admin privileges or not. If the user is an admin, the server simply reads and returns all entries from the \textit{log\_users} table of the database. If the user is not authorized to see all users' login activity, the server selects only the current users' entries from the database:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ db.each(`SELECT * FROM log_users WHERE user = "` + user + `"`, (err, row) => {
+ 		if (err) {   
+ 			console.error(err.message);                                                              
+ 		}
+                
+ 		let time = new Date(row.timestamp)
+ 		let time_formatted = time.toLocaleString();
+ 		log.push({"timestamp":time_formatted + ': ',"user":row.user});
+ });
+\end{lstlisting}
+
+Each entry read gets added to a JSON array with its' timestamp being formatted to a readable format. After all the entries have been read, the JSON array will be returned to the client as the response.
+
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Data transfer
+%--------------------------------------------------------------------------------------------------
+
+\section{Data transfer}
+\label{sec:data_transfer}
+
+The system requires different kinds of communication. First, the IoT device needs to send sensor data to the server which then logs and saves this data. But the data must also be sent to the client on request. Also, the client needs to be able to request a new target pressure or fan speed by sending a request to the server. The server then has to pass this request to the IoT device.
+
+While some of the messages are being sent frequently, some are not. To deal with those requirements, three kinds of communication are used in this system: MQTT, WebSocket, and basic HTTP requests.
+
+
+
+\subsection{Communication between the oT device and the server}
+\label{subsec:communication_between_the_iot_device_and_the_server}
+
+MQTT is a messaging protocol designed for IoT applications and uses a separate MQTT broker to pass messages between clients. MQTT uses a publish/subscribe system to transport data.
+
+The IoT device connects to the broker, publishes messages on a topic to send sensor data to the server, and subscribes to a different topic to receive commands sent by the user. The server on the other hand subscribes to the sensor data topic and publishes commands on the second topic.
+
+By default, the system uses the topic \textit{controller/status} to pass sensor data. Once subscribed to the topic, the serve initializes an event handler on all incoming messages. Messages on that topic are being sent in the following format:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ {"nr":1, "speed":31, "setpoint":10, "pressure":10, "auto":true, "error":false}
+\end{lstlisting}
+
+Once a new message is being received, the event handler triggers and stores the received data in the database. To enable the server to serve a set of sensor data for pressure or fan speed only in a fast way, those sets of data are being stored in separate tables (chapter \ref{sec:global_database}).
+
+
+
+\subsection{Communcation between the server and the client}
+\label{subsec:communication_between_the_server_and_the_client}
+
+While HTTP requests are a great way to send a single set of data as a response to a single request, this is not very convenient for sending data on a frequent basis.
+
+WebSocket is a communication protocol providing full-duplex communication between a server and one or several clients. Using WebSocket, the client can establish a communication channel to the server. Data can be sent in both directions at all times and by setting up event listeners, both the server and the client can also react to received messages at all times.
+
+If the client needs a set of sensor data to display on the control panel, it fetches the data using an HTTP request and receives a single set of data in return. But for showing live data (section\ref{subsec:live_data}) or displaying warnings (chapter \ref{subsec:warnings}), the system uses WebSocket communication.
+
+
+\subsubsection{Data minimization}
+\label{subsec:data_minimization}
+
+Every time a user loads the control panel page of the web interface, the client fetches a set of data to plot for both pressure and fan speed. By default, the control panel plots an all-time chart of the data. As the IoT device publishes data every few seconds, the server has a huge set of data stored in its' database. Returning a set of data with many thousands of entries not only results in an unpleasantly long loading time but also has an enormously bad impact on the performance of the control panel itself. Life data would be displayed in a laggy way, the control panel would react very slowly to any user input, and resizing the browsers' window could even trigger freezes.
+
+To get rid of this problem, the server reduces traffic and improves the interface performance by shortening the set of data each time before returning it to the client. This does not affect the data stored in the database but only the data being displayed on the control panel. \\
+
+The sensor data is being read and returned as a JSON array. By testing several array sizes it turned out that arrays with up to 1.000 entries each do not affect the loading time or performance in a critical way but still allow the plots to display data in a smooth way.  Therefore, each set of data read from the database is being shortened before being returned to the client using the following function.
+
+\begin{lstlisting}[language = Java, numbers = none]
+ function shorten_array(arr) {
+ 		let res = arr;
+ 		let comp = arr;
+ 		while(res.length > 1000) {
+ 				res = [];
+ 				let idx = 0;
+ 				for(let i = 0; i < comp.length; i++) {
+ 						res[idx] = comp[i];
+ 						idx++;
+ 						i++;
+ 				}
+ 				comp = res;
+ 		}
+ 		return res;
+ }
+\end{lstlisting}
+
+This function checks the length of the initial array read from the database. If the array contains more than 1.000 entries, each second element is being dropped and the remaining elements form the new array. This procedure gets repeated as long as the resulting array still has more than 1.000 elements. In the end, the resulting array has between 500 and 1.000 elements. This array will then get returned to the client and the data contained will be displayed on the control panel afterward. 
+
+
+\subsubsection{Live data}
+\label{subsec:live_data}
+
+While the user is using the control panel, all sensor data that is currently being received should automatically be added to the plots. The user should be able to see live data all the time.
+To do so,  data gets send using the WebSocket connection. Each time a user establishes a WebSocket connection to the server, a new MQTT subscriber is being set up to listen to all incoming messages containing sensor data. Every time an MQTT message is being received, the pressure, setpoint, fan speed, and error parameters will immediately get passed to the client via WebSocket. This ensures that the server provides the most current sensor data to the client all the time without sending unnecessary requests or data in between.
+
+
+\subsubsection{Warings}
+\label{subsec:warnings}
+
+If the client sets the target pressure to a value that could not be reached in a reasonable time, the IoT device will indicate that by setting the error bit in the data messages sent via MQTT. If this happens, the system needs to tell the user by displaying a warning on the web interface.
+
+While the user is using the control panel, the error indicator is automatically being passed to the client alongside the sensor data (chapter \ref{subsec:live_data}) but this data is not being sent if the user is using another interface page. To do so, the client establishes a WebSocket communication to the server on the other interface pages as well indicating that only errors and no sensor data should be sent. The server then again sets up an MQTT subscriber on all incoming messages but the event listener will only pass the error indicator to the client to reduce traffic.\\
+
+Another problem is, that the IoT device keeps sending errors until the target pressure is reached. This could either happen after some more time or after the user has set a new, reachable target pressure. As the server should not send multiple error messages to the client that would trigger an alert each time a new set of sensor data is being received, some kind of filter is essential.
+
+To do so, the server sets a bit indicating if the error bit was set in the last message received. This allows the server to recognize new errors. If a new error is being received, the error gets passed to the client. Otherwise, the error bit of the WebSocket message will be set to \textit{false} even if the error is still active. The client will then only display an alert once per each new error.
+
+
+\subsubsection{Sending commands}
+\label{subsec:sending_commands}
+
+Next to receiving data, the client also needs to be able to send commands to the IoT device to set a new target pressure or fan speed. As this command is only being sent once in a while, the client does not send this command via the established WebSocket connection but using a basic HTTP POST request. The server then passes this command to the IoT device by publishing a message on the \textit{controller/settings} topic in one of the following formats:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ {"auto": true, "pressure": 30}
+ {"auto": false, "speed": 60}
+\end{lstlisting}
+
+If the client requested a specific target pressure, the \textit{auto} bit will be set to \textit{true} to indicate that the system needs to run in automatic mode. If a target fan speed is being requested, the manual mode is active which will be indicated by setting the \textit{auto} bit to \textit{false}. After sending the command, the IoT device should immediately react by adjusting the current fan speed and mode depending on the new parameters.
+
+
+
+\subsubsection{Storing identifiers}
+\label{subsec:storing_identifiers}
+
+Depending on the current state of the system, different values for mode, target pressure, and target fan speed are currently set. To automatically display the correct values on the control panel, the server needs to keep track of those parameters. Each time a user switches the mode or sets a new target value, the server stores this value into a variable. While loading the control panel, the client can then fetch this data and display the current state instantly.
+
+The current state must be persistent and independent of reloading the web interface, connecting from different user accounts, or even server restarts. To retain the current state even after a server restart, this data needs to be stored in the \textit{target\_values} table of the database (chapter \ref{sec:global_database}). The table contains a set of data indicating the current mode, target pressure, and target fan speed in the following format:
+
+\begin{lstlisting}[language = SQL, numbers = none]
+ {"id": "pressure", "value": 30}
+ {"id": "fan_speed", "value": 60}
+ {"id": "mode", "value": 0}
+\end{lstlisting}
+
+On startup, the server will initially load those entries from the database to return this data on clients' requests.

@@ -288,13 +288,13 @@ function get_activity(req, res, next, username, role) {
         // fetch users entries
         db.serialize(() => {
             db.each(`SELECT timestamp as timestamp, user as user FROM log_users WHERE user = "` + username + `"`, (err, row) => {
-            if (err) {                                                                                          // catch errors
-                console.error(err.message);                                                                     // log
-            }
-            
-            let time = new Date(row.timestamp)
-            let time_formatted = time.toLocaleString();
-            log.push({"timestamp":time_formatted + ': ',"user":row.user.charAt(0).toUpperCase() + row.user.slice(1)});
+                if (err) {                                                                                          // catch errors
+                    console.error(err.message);                                                                     // log
+                }
+                
+                let time = new Date(row.timestamp)
+                let time_formatted = time.toLocaleString();
+                log.push({"timestamp":time_formatted + ': ',"user":row.user.charAt(0).toUpperCase() + row.user.slice(1)});
             });
         });
     }

@@ -30,6 +30,8 @@
 
 %Farben
 \usepackage{xcolor}
+\definecolor{ventpro_gray}{RGB}{38, 38, 38}
+\definecolor{ventpro_blue}{RGB}{144, 251, 255}
 
 %Links, Ref
 \usepackage[
@@ -130,9 +132,8 @@
 \includeonly{
 	chapter/front,
 	chapter/introduction,
-	chapter/authentication_and_authorization,
-	chapter/interface_pages,
-	chapter/communication_and_plotting_of_sensor_data,
+	chapter/back_end_implementation,
+	chapter/front_end_implementation,
 	}
 
 %% Dokument %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,8 +143,7 @@
 	\tableofcontents
 	
 	\include{chapter/introduction}
-	\include{chapter/interface_pages}
-	\include{chapter/authentication_and_authorization}
-	\include{chapter/communication_and_plotting_of_sensor_data}
+	\include{chapter/back_end_implementation}
+	\include{chapter/front_end_implementation}
 	
 \end{document}

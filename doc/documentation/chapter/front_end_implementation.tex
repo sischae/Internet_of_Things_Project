@@ -1,0 +1,242 @@
+\chapter{Front end implementation}
+\label{ch:front_end_implementation}
+
+As the back end implementations' main task is to provide functionality, the front end implementation also needs to consider the design and usability of the interface. It is important to have a clear and consistent design on all pages. Also, the menu and every other way of providing user inputs need to be intuitive and consistent in terms of the design. 
+
+To keep a consistent design, the interface uses two basic colors - a dark gray (\textcolor{ventpro_gray}{\#262626}) and a light blue (\textcolor{ventpro_blue}{\#90fbff}) as a contrast color. Those two colors are used on all pages.
+
+To make the interface as intuitive as possible, the menu, amount of pages, and amount of possible interactions are kept on a very basic level. The goal was to provide everything needed in a most simple and usable way to the user. For example: Even if the control panel could be split up into multiple subpages displaying the pressure and fan speed separately or having a single page for setting new target values, all those functionalities are integrated on one page on purpose.
+
+In general, all positioning has been done using flexboxes which also makes it easy to make the interface responsive. The design as well as some animations are done using custom CSS.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Reponsive header and navigation menu
+%--------------------------------------------------------------------------------------------------
+
+\section{Responsive header and navigation menu}
+\label{sec:responsive_header_and_navigation_menu}
+
+The navigation menu is a central element of the web interface that is consistent on all pages and allows the user to navigate between the different subpages. The header needs to directly indicate what kind of interface the web page is and what options the user has. To do so, the header displays an animated fan next to the interfaces’ title VentPro in the top left corner of the page. On the right side of the header, the navigation menu displays all available sub-pages with an intuitive icon next to each text.
+
+As the whole interface needs to be responsive and can be used both on desktop computers and mobile devices, this also applies to the header. Depending on the current window size of the browser, the header adjusts its' width automatically. As the width is being reduced, the interface will first hide the texts of the navigation menu to reduce the required space. The text is being hidden instead of the icons because icons require way less space and are very intuitive as well. If the width is being reduced even more, the "VentPro" text will disappear as well. The rotating fan will always be displayed. This responsiveness is realized using the CSS \textit{media screen}. The limiting values have been deduced by testing multiple values. The elements are now being hidden perfectly right before clashing into another element.
+
+Apart from making the header responsive, it is also important to indicate which page is currently loaded in a nice way. To do so, the current pages' text and item in the navigation menu will be highlighted by displaying both in the blue contrast color while all other elements are colored white.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Help page
+%--------------------------------------------------------------------------------------------------
+
+\section{Help page}
+\label{sec:help_page}
+
+It is indispensable to provide simple instructions on how to use the web interface on the interface itself. A user should not need to reach out to the user manual but should be able to find all necessary explanations on an integrated help page. The help page provides information about both the control panel and the settings page and gives answers to typical questions.  Displaying questions with their answers makes it way easier for the user to find a solution for a problem than just giving a large set of instructions.
+
+At the top of the page, the user can directly navigate between the different sections or open the official user manual.  To increase usability, the answers are not being displayed instantly. Instead, answers can be displayed by clicking any of the listed questions.  Using an accordion-like CSS transition, answers will blend in smoothly right underneath the selected question. 
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Control panel
+%--------------------------------------------------------------------------------------------------
+
+\section{Control panel}
+\label{sec:control_panel}
+
+The control panel allows the user to switch between automatic and manual mode. In automatic mode, the user can set a target pressure between 0Pa and 120Pa. The ventilation system will automatically adjust the current fan speed depending on the requested target pressure. In manual mode on the other hand, the target fan speed can be set to a value between 0\% and 100\%. The ventilation will set the current fan speed to the requested value no matter the pressure. 
+
+Depending on the active mode, the input elements will be activated/deactivated (chapter \ref{subsec:activating_and_inactivating_the_panels}). The system is either in automatic or manual mode and the user can set the target values of the current mode only.  The mode can be changed using the switch displayed at the top of the control panel (chapter \ref{subsec:switching_the_mode}). After loading the control panel page, the client will fetch the current mode from the server and activate the correct control panel depending on the response. 
+
+Besides the input elements to set target values, the control panel displays a plot of current sensor data both for current pressure and fan speed (chapter \ref{subsec:plotting_the_data}). As well as three buttons to select data of different time intervals. 
+
+
+
+\subsection{Activating and inactivating the panels}
+\label{subsec:activating_and_inactivating_the_panels}
+
+Depending on the current mode, only one of the two panels is active. The other one should still display the current sensor data,  but the user should not be able to change any settings for that mode while it is inactive. Apart from disabling user inputs, the design of the inactive panel should change to clearly indicate to the user that it can not be used at the moment.
+
+To disable all user inputs, the flexbox contains an overlay with the same dimensions and a transparent body. Setting the z-index of the overlay to a higher value will display it above the flexbox disabling the user to click any of the elements below.  To activate the panel, the overlay is being hidden which makes the elements underneath accessible again.
+
+\newpage
+To indicate that a panel is inactive, some filters are being applied to the panels' flexbox:
+
+\begin{lstlisting}[language = HTML, numbers = none]
+ document.getElementById('control_manual').style.opacity =  0.5;
+ document.getElementById('control_manual').style.webkitFilter = "blur(1px)";
+\end{lstlisting}
+
+Reducing the opacity will fade out the panel to a percentage of 50\%. Adding a blur effect then gives the final touch to make the panel look like it can not be used at the moment. Changing the values of the effects applied could increase the effect, but would also make the plot illegible. The chosen fulfill both requirements nicely. To reactivate a panel, the client just resets the opacity to 100\% and clears the blur effect.
+
+By default, both panels are disabled. Once the page is loaded, the client will fetch the current mode from the server. Depending on the response, one of the panels will get activated. This is essential because enabling the panels by default would allow the user to send invalid requests to the server while the client is fetching the current mode. 
+
+
+
+\subsection{Switching the mode}
+\label{subsec:switching_the_mode}
+
+The mode is stored on the server to prevent clients from sending requests of different modes at the same time.  After loading the page, the client will initially fetch the current mode from the server, set the switch to the correct position and enable the active panel.
+
+If the user switches modes, the client will send a post request to the server to change the global mode. If the server responds with a status 200 (OK), the client switches its' local mode and activates the other control panel. Otherwise, the switch will not be set and the other panel will remain inactive.
+
+As the mode should not only be changed on the web interface and the server, but also at the ventilation system itself, the client also needs to send a command to the IoT device. If the mode got changed, the client will send a POST request with the current target value for either the pressure or fan speed to the server. The server will then pass the command to the IoT device via MQTT (chapter \ref{subsec:sending_commands}).
+
+
+
+\subsection{Plotting the data}
+\label{subsec:plotting_the_data}
+
+To display sensor data on the control panel, the client generates two plots, one for pressure and one for fan speed data. The free open-source library Chart.js can be used to plot data in a lot of ways. In this case, basic lined plots will show the pressure and fan speed over time.  The parameters of the plots can easily be adjusted to fit the given range of 0-120Pa for displaying the pressure and 0-100\% for displaying the fan speed. The x-axis will automatically be labeled depending on the data that gets assigned to it. To display the timestamps in a readable format, the values get formatted manually before assigning them to the plot. Depending on the selected time interval, the plot will either show a date or a day time for each data point.
+
+Apart from setting the correct range and labeling the axes, some design adjustments were made as well. To stick with the consistent design of the interface, the color of the plots has been set to the general blue highlight color. To improve readability, a slightly darker version of the same base color has been chosen which is still noticeable on disabled panels. To keep the nice and clean design even if huge sets of data are loaded, the circle radius of the single data points has been reduced. Also, the tension parameter of the plots has been set to 0.4. This causes the client to calculate a smooth interpolation between the single data points. Interpolation makes it easier to see the reaction of the ventilation system and looks more realistic than linear interpolation.
+
+
+
+\subsubsection{Fetching data of the selected interval}
+\label{subsec:fetching_data_of_the_selected_interval}
+
+After loading the control panel or after the user selected a different time interval (chapter \ref{subsec:selecting_different_time_intervals}) the client needs to fetch a set of data that should be displayed in the plot. To do so, an HTTP GET request is being sent to the server. The request includes information about the time interval as well as the requested kind of data. By requesting the sensor data for the pressure and fan speed separately, the traffic is being reduced and the overall performance is being improved. The data is being returned as a JSON array. After receiving the data, the client parses the data points and their associated timestamps to the plot by overwriting the former dataset.
+
+
+\subsubsection{Receiving and displaying live data}
+\label{subsec:receiving_and_displaying_live_data}
+
+While datasets for the plots are being fetched after loading the control panel or selecting a different time interval, live data needs to be added to the plot frequently. As described in chapter \ref{subsec:communication_between_the_server_and_the_client},  live data is being passed to the client via WebSocket messages as soon as they get received. 
+
+The client reacts to every incoming message and checks if valid sensor data has been received. Then, the data is being extracted and added to the plots dataset. After refreshing the plot using the Chart.js function \textit{plot.update()}, the new data point will get added to the plot. This procedure is being done for both plots as every message contains a current value for both pressure and fan speed. 
+
+Also, after receiving a new message, the current values will be displayed as a number above the plots. Appending the current value to the title of the plot is a convenient way to display the current state. This makes it easier for the user to read the current values than hovering over the latest data point in the plot.
+
+
+\subsubsection{Selecting different time intervals}
+\label{subsec:selecting_different_time_intervals}
+
+Each panel provides three buttons to choose between different intervals of time depending on what data should be displayed. Clicking on a button will trigger an event listener. The event listener will request a set of data from the server and convert the timestamps into the correct format.
+
+Depending on the selected time interval, the x-axis of the plots will either show a date (\textit{DD.MM.YYYY}) or a day time (\textit{HH:MM:SS}) for each data point. The dataset returned by the server contains timestamps in milliseconds since 01.01.1970 00:00:00 UTC. If the selected time interval is "\textit{all}", the timestamps will be displayed as dates. If "\textit{today}" or "\textit{last minute}" has been selected as the interval, the time of the measurement will be displayed instead. Both conversions are done using custom date prototypes that can be applied to a given date object.
+
+After a new time interval has been selected, an indicator is being set to keep track of the current settings. This allows the client, to correctly format timestamps of the incoming live data before adding it to the plot.
+
+
+
+\subsection{Setting the target pressure and target fan speed}
+\label{subsec:setting_the_target_pressure_and_target_fan_speed}
+
+One of the main features of the web interface is setting a target pressure or a target fan speed for the ventilation controller. The target values can be set by adjusting one of the sliders displayed underneath the plots on the control panel. Sliders provide a smoother and more intuitive way of setting a value than typing a number into a basic text input field and were therefore chosen for this purpose. The possible range of the target pressure is from 0Pa to 120Pa while the fan speed can be set between 0\% and 100\%.
+
+
+\subsubsection{Fetching the current state of the system}
+\label{subsec:fetching_the_current_state_of_the_system}
+
+The current target values are always being displayed right above the slider. This indicates the current state of the system, but also makes it easier to set the pressure or fan speed to a specific value. Of course, this value should always be up to date. To ensure that, the client will initially fetch the current target values from the server after loading the page. After receiving the response, the labels will be overwritten with the current values and both sliders will be set to that value as well.
+
+
+\subsubsection{Sending a new target pressure and fan speed}
+\label{subsec:sending_a_new_target_pressure_and_fan_speed}
+
+As soon as the user moves the slider to a different position, two things need to happen. The label above needs to update its' value to tell the user what exact value has been set. Also, the client needs to send a command to the IoT device to pass the new settings.
+
+To handle user inputs on a slider, event handlers are used. Every time a user readjusts the slider, the updated target value should be sent to the server. But also, while the user is still moving the slider, the label above should already update its' text. This allows the user to set an exact target value without needing to readjust the slider a couple of times.
+
+While the "\textit{change}" event of a slider triggers, when a new position has been finally set, the "\textit{input}" event already triggers every time the slider has reached a new position, even if it has not been released yet. To prevent the client to send a huge amount of unnecessary and unintentionally selected values, the "\textit{change}" event is not being used for sending commands to the server. Otherwise, for example, moving the target pressure from 10Pa to 30Pa would trigger the client 20 times and 20 messages with new requests would be sent to the server and the ventilation controller. To prevent this from happening, the "\textit{input}" event is used for sending commands. Sending the command itself is done by sending an HTTP POST request to the server. The body of the request indicates whether the pressure or fan speed has been set and passes the requested value as well. The server then handles this request and passes the command to the IoT device as described in chapter \ref{subsec:sending_commands}.
+
+On the other hand, the label above the slider should behave in that exact way. Therefore, a second event listener has been added to trigger on "\textit{change}" events of the sliders. After triggering, it will simply update the label to indicate the exact current position of the slider.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Settings page
+%--------------------------------------------------------------------------------------------------
+
+\section{Settings page}
+\label{sec:settings_page}
+
+% activating / inactivating similar to the control panel
+The settings page is available for all logged-in users through the \textit{/settings} route. The settings page displays the same elements for each user. But depending on the users' permission, the content and allowed actions might differ. The settings page displays the login history depending on the user as well as two forms for changing the password and adding a new user to the system.
+
+
+
+\subsection{Changing the current users' password}
+\label{subsec:changing_the_current_users_password}
+
+The client displays a text input and a button to enable the user to set a new password. The placeholder property will ask the user to enter a password. Both, the input and the button are embedded into a form that has an event handler for "submit" events. Therefore, the user can set a new password by pressing the "OK" button or the "Enter" key.  The input field has the required parameter set to prevent the user from sending a post request with empty parameters.
+
+When the server receives the request to change the password from an authenticated user, it does not need to check permissions. All users are authorized to change their passwords. The server just generates a hash based on the username and the new password and updates the users' entry in the database. The server then will return a status message with a status code.
+
+When the client receives the result from the server, it will clear the input and display an alert to inform the user whether the password was successfully changed or not. If the password was changed, the user needs to log in with the new credentials. For user experience purposes, the client will automatically log out the user and redirect to the logout page.
+
+
+
+\subsection{Adding a new user to the system}
+\label{subsec:adding_a_new_user_to_the_system}
+
+Adding a new user to the system works similarly to changing the password. The client displays two input boxes and asks the user to enter a username and a password. Both inputs are required and the password input is of the type "password". That will hide the entered password and just display dots instead. After the user submitted the input, the client will send a post request to the server to add the new user to the system.
+
+After receiving the request, the server needs to check the users' permission before adding a new user to the system. Only admin accounts are authorized to add new users. If the user does not have the required permission, the server will return a 403 'Forbidden' error to the client. Otherwise, the server will first check if the requested user already exists in the database.  I the user already exists, a 409 'Conflict' error will be returned. If the client requested to add a user that does not already have an entry in the database,  the server will first generate a hash based on username and password and then insert a new user to the database. The role of all users added to the system using the web interface is 'default'. The timestamp is initially set to 0 so the users' first login will automatically be handled as a new login (chapter \ref{subsec:user_authentication}). After successfully adding a new user, the server will return a 200 'OK' status to the client.
+
+When the client receives the result from the server, it will clear the input fields and display an alert depending on the received status code.
+
+
+
+\subsection{Displaying the login activity}
+\label{subsec:displaying_the_login_activity}
+
+The client will automatically fetch a list of all login events the server has logged to the database. If the user has admin privileges, the server will return all login events, otherwise just those of the current user. The data gets returned as a JSON array.
+After receiving the data, the client checks the number of received events and divides it into a dynamic amount of pages with eight events each. This is done for user experience purposes only. The server then generates a flexbox for each of the eight events and adds it to the login history. It also adds two buttons to switch between the pages of data.
+If the user clicks one of the navigation buttons, the client will reset the displayed list and add the next pages' data by accessing the received data at another index.  The buttons are only active if there are more pages available to load.
+If a page contains less than eight events, the client will add space holder items instead to keep the design consistent.
+
+When the server receives a request for the login history it first checks the permission of the user. If the user has admin privileges, the server will select all data from the \textit{log\_users} table of the main database and return it to the user.  The \textit{log\_users} table is part of the main database and logs all new logins in the following format:
+
+\begin{lstlisting}[label = lst:log_users, language = SQL, numbers = none]
+ CREATE TABLE log_users(timestamp INT, user TEXT);
+\end{lstlisting}
+
+If the user does not have admin privileges, the server will select all entries, where the username equals the user that send the request and return those to the client.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Displaying warings
+%--------------------------------------------------------------------------------------------------
+
+\section{Displaying warnings}
+\label{sec:displaying_warnings}
+
+As described in chapter \ref{subsec:warnings}, the ventilation controller sets an error indicator in its' messages if the requested pressure could not be reached in a reasonable time. The server passes the information about this error alongside the sensor data while the user is using the control panel, but in a separate message while another page is currently loaded. Therefore, each page of the web interface establishes a WebSocket connection to the server to receive warnings without manually fetching this information regularly to reduce traffic.
+
+As soon as the client receives a message with the error indicator being true, an alert will be displayed immediately.  The alert will tell the user that the requested pressure could not be reached. Additionally, the alert will display the current pressure to let the user know how much the difference between the requested and actual pressure is at the moment:
+
+\begin{lstlisting}[label = lst:log_users, language = Java, numbers = none]
+ alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 
+ 		'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + 
+ 		msg.pressure + 'Pa');
+\end{lstlisting}
+
+It is important, that the user gets the information about an error immediately. Even if the user has set a new target pressure on the control panel and then switched to the help or settings page, the alert still needs to be displayed. Therefore, this alert function is active on all the interface pages except the logout page.
+
+Although, with this implementation, the client would display the same warning each time the user reloads a page while the error is being active. This happens because reloading the page will establish a new WebSocket connection. As described in chapter \ref{subsec:warnings}, the server will add a new error handler for each connection and therefore trigger an alert each time. 
+
+%TODO
+% Cookies
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Logging a user out
+%--------------------------------------------------------------------------------------------------
+
+\section{Logging a user out}
+\label{sec:logging_a_user_out}
+
+
+
