@@ -124,16 +124,29 @@ Depending on the selected time interval, the x-axis of the plots will either sho
 After a new time interval has been selected, an indicator is being set to keep track of the current settings. This allows the client, to correctly format timestamps of the incoming live data before adding it to the plot.
 
 
+
 \subsection{Setting the target pressure and target fan speed}
 \label{subsec:setting_the_target_pressure_and_target_fan_speed}
+
+One of the main features of the web interface is setting a target pressure or a target fan speed for the ventilation controller. The target values can be set by adjusting one of the sliders displayed underneath the plots on the control panel. Sliders provide a smoother and more intuitive way of setting a value than typing a number into a basic text input field and were therefore chosen for this purpose. The possible range of the target pressure is from 0Pa to 120Pa while the fan speed can be set between 0\% and 100\%.
 
 
 \subsubsection{Fetching the current state of the system}
 \label{subsec:fetching_the_current_state_of_the_system}
 
+The current target values are always being displayed right above the slider. This indicates the current state of the system, but also makes it easier to set the pressure or fan speed to a specific value. Of course, this value should always be up to date. To ensure that, the client will initially fetch the current target values from the server after loading the page. After receiving the response, the labels will be overwritten with the current values and both sliders will be set to that value as well.
+
 
 \subsubsection{Sending a new target pressure and fan speed}
 \label{subsec:sending_a_new_target_pressure_and_fan_speed}
+
+As soon as the user moves the slider to a different position, two things need to happen. The label above needs to update its' value to tell the user what exact value has been set. Also, the client needs to send a command to the IoT device to pass the new settings.
+
+To handle user inputs on a slider, event handlers are used. Every time a user readjusts the slider, the updated target value should be sent to the server. But also, while the user is still moving the slider, the label above should already update its' text. This allows the user to set an exact target value without needing to readjust the slider a couple of times.
+
+While the "\textit{change}" event of a slider triggers, when a new position has been finally set, the "\textit{input}" event already triggers every time the slider has reached a new position, even if it has not been released yet. To prevent the client to send a huge amount of unnecessary and unintentionally selected values, the "\textit{change}" event is not being used for sending commands to the server. Otherwise, for example, moving the target pressure from 10Pa to 30Pa would trigger the client 20 times and 20 messages with new requests would be sent to the server and the ventilation controller. To prevent this from happening, the "\textit{input}" event is used for sending commands. Sending the command itself is done by sending an HTTP POST request to the server. The body of the request indicates whether the pressure or fan speed has been set and passes the requested value as well. The server then handles this request and passes the command to the IoT device as described in chapter \ref{subsec:sending_commands}.
+
+On the other hand, the label above the slider should behave in that exact way. Therefore, a second event listener has been added to trigger on "\textit{change}" events of the sliders. After triggering, it will simply update the label to indicate the exact current position of the slider.
 
 
 
@@ -197,6 +210,23 @@ If the user does not have admin privileges, the server will select all entries, 
 
 \section{Displaying warnings}
 \label{sec:displaying_warnings}
+
+As described in chapter \ref{subsec:warnings}, the ventilation controller sets an error indicator in its' messages if the requested pressure could not be reached in a reasonable time. The server passes the information about this error alongside the sensor data while the user is using the control panel, but in a separate message while another page is currently loaded. Therefore, each page of the web interface establishes a WebSocket connection to the server to receive warnings without manually fetching this information regularly to reduce traffic.
+
+As soon as the client receives a message with the error indicator being true, an alert will be displayed immediately.  The alert will tell the user that the requested pressure could not be reached. Additionally, the alert will display the current pressure to let the user know how much the difference between the requested and actual pressure is at the moment:
+
+\begin{lstlisting}[label = lst:log_users, language = Java, numbers = none]
+ alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 
+ 		'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + 
+ 		msg.pressure + 'Pa');
+\end{lstlisting}
+
+It is important, that the user gets the information about an error immediately. Even if the user has set a new target pressure on the control panel and then switched to the help or settings page, the alert still needs to be displayed. Therefore, this alert function is active on all the interface pages except the logout page.
+
+Although, with this implementation, the client would display the same warning each time the user reloads a page while the error is being active. This happens because reloading the page will establish a new WebSocket connection. As described in chapter \ref{subsec:warnings}, the server will add a new error handler for each connection and therefore trigger an alert each time. 
+
+%TODO
+% Cookies
 
 
 
