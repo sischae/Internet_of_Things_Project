@@ -8,6 +8,8 @@ const util = require('util');
 const app = express();
 const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
+const cookieParser = require("cookie-parser");
+const sessions = require('express-session');
 
 const mqtt = require('mqtt');
 
@@ -127,6 +129,30 @@ webSocketServer.on('connection', (ws, req) => {
 
 
 /******************************************************************************************
+SESSIONS SETUP
+******************************************************************************************/
+
+const cookie_maxAge = 1000 * 60 * 60 * 1;                                                                       // set max age of authentication cookies to one hour
+
+app.use(sessions({
+    secret: "mccTzR1OxRh4DCvnegXgzNt1JvedKAtf70BhpDfJYdqVuVBuUWM5PMsdZTEx+4F190U1QaeI7Yzya0ZJ3IR2nw==",
+    saveUninitialized:true,                                                                                     // allow uninitialized sessions
+    cookie: { maxAge: cookie_maxAge },                                                                          // set expiry date
+    resave: false                                                                                               // prevent hazards
+}));
+
+// parse incoming data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
+
+var session;
+
+
+
+
+/******************************************************************************************
 ROUTES
 ******************************************************************************************/
 
@@ -159,7 +185,7 @@ app.get('/help', async (req, res, next) => {
 
 // return logout page
 app.get('/logout', async (req, res) => {
-    res.render('logout');
+    res.render('logout', {error: ''});
 });
 
 
@@ -168,9 +194,16 @@ app.get('/logout', async (req, res) => {
 requested actions
 */
 
-// log out
+// login
+app.post('/login_user',(req,res, next) => {
+    login_user(req, res, next);
+});
+
+// logout
 app.get('/req_logout', async (req, res, next) => {
-    auth_user(req, res, next, 'req_logout');
+    //auth_user(req, res, next, 'req_logout');
+    req.session.destroy();
+    res.redirect('/logout');
 });
 
 
@@ -222,6 +255,7 @@ app.post('/cmd', async (req, res, next) => {
 app.get('/get_target_values', async (req, res, next) => {
     auth_user(req, res, next, 'get_target_values');
 });
+
 
 
 
@@ -713,191 +747,208 @@ function get_target_values(req, res, next) {
 
 
 /******************************************************************************************
-AUTHENTICATE USER
+USER LOGIN
 ******************************************************************************************/
+
+function login_user(req, res, next) {
+    // get username and password from body
+    var username = req.body.username;
+    var password = req.body.password;
+    
+    // generate and compare hashes
+    crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, derivedKey) => {
+        if (err) throw err;                                                                                 // catch errors
+        
+        let hash_in = derivedKey.toString('hex');                                                           // generate hash for given username and password
+        let hash_db = 'init';                                                                               // stores hash from database
+        let last_login = 0;
+        let role = '';
+
+        
+        // open database
+        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+            if (err) {                                                                                      // catch errors
+                return console.error(err.message);                                                          // log
+            }
+        });
+
+        // fetch all users
+        db.serialize(() => {
+            db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
+                if (err) {                                                                                  // catch errors
+                    console.error(err.message);                                                             // log
+                }
+                
+                // filter username
+                if(row.username == username) {                                                              // filter users
+                    hash_db = row.hash;                                                                     // get hash from database
+                    last_login = row.timestamp;
+                    role = row.role;
+                }
+            });
+        });
+
+        // close the database connection
+        db.close((err) => {
+            if (hash_in == hash_db) {
+                let db = new sqlite3.Database(path_db);                                                     // connect to database
+                
+                // update timestamp of last activity
+                let time = Date.now();
+                
+                db.run('INSERT INTO log_users(timestamp, user) VALUES("' + time + '", "' + username + '")', function(err) {
+                    if (err) {                                                                          // catch errors
+                        return console.log(err.message);                                                // log
+                    }
+                });
+                
+                db.run('UPDATE users SET timestamp = ' + time + ' WHERE username = "' + username + '";', function(err) {
+                    if (err) {                                                                              // catch errors
+                        return console.log(err.message);                                                    // log
+                    }
+                });
+                
+                db.close((err) => {
+                    session = req.session;
+                    session.userid = req.body.username;
+                    res.redirect('/');
+                });
+            }
+            else{
+                res.render('logout', {root:__dirname, error: 'The entered username or password is not correct.'});
+            }
+        });
+    });
+};
+
+
+
+
+/******************************************************************************************
+USER AUTHENTIFICATION
+******************************************************************************************/
+
 
 // authenticate user an redirect to correct page
 function auth_user(req, res, next, redirect, arg_dyn = '') {                                                     // arg_dyn may get used, but is not required
-    var authheader = req.headers.authorization;
-    res.setHeader('WWW-Authenticate', 'Basic');
- 
-    // ceck if authheader is empty
-    if (!authheader) {
-        var err = new Error('You are not authenticated!');
-        err.status = 401;
-        return next(err);
-    } else {
-        // get username and password from header
-        var auth = new Buffer.from(authheader.split(' ')[1],
-        'base64').toString().split(':');
-        var username = auth[0];
-        var password = auth[1];
-        
-        // generate and compare hashes
-        crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, derivedKey) => {
-            if (err) throw err;                                                                                 // catch errors
+    session = req.session;
+    
+    let role;
+    
+    
+    // open database
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+        if (err) {                                                                                      // catch errors
+            return console.error(err.message);                                                          // log
+        }
+    });
+
+    // fetch all users
+    db.serialize(() => {
+        db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
+            if (err) {                                                                                  // catch errors
+                console.error(err.message);                                                             // log
+            }
             
-            let hash_in = derivedKey.toString('hex');                                                           // generate hash for given username and password
-            let hash_db = 'init';                                                                               // stores hash from database
-            let last_login = 0;
-            let role = '';
+            // filter username
+            if(row.username == session.userid) {                                                        // filter users
+                role = row.role;
+            }
+        });
+    });
 
-            
-            // open database
-            let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-                if (err) {                                                                                      // catch errors
-                    return console.error(err.message);                                                          // log
-                }
-            });
-
-            // fetch all users
-            db.serialize(() => {
-                db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
-                    if (err) {                                                                                  // catch errors
-                        console.error(err.message);                                                             // log
-                    }
+    // close the database connection
+    db.close((err) => {
+        if(session.userid){
+            res.setHeader('WWW-Authenticate', 'Basic');
+            switch(redirect) {
+                    case 'activity':
+                        get_activity(req, res, next, session.userid, role);
+                        break;
                     
-                    // filter username
-                    if(row.username == username) {                                                              // filter users
-                        hash_db = row.hash;                                                                     // get hash from database
-                        last_login = row.timestamp;
-                        role = row.role;
-                    }
-                });
-            });
-
-            // close the database connection
-            db.close((err) => {                                                                                 // close database connection
-                if (err) {                                                                                      // catch errors
-                    return console.error(err.message);                                                          // log
-                }
-                
-                
-                // compare generated hash with hash from database
-                if (hash_in == hash_db) {                                                                       // If Authorized user
-                    // log activity
-                    let db = new sqlite3.Database(path_db);                                                     // connect to database
+                    case 'permission':
+                        res.status(200).send(role);
+                        break;
                     
-                    // update timestamp of last activity
-                    let time = Date.now();
+                    case 'req_logout':
+                        db = new sqlite3.Database(path_db);                                         // connect to database
                     
-                    if((time - last_login) > 30 * 60 * 1000) {                                                  // if users last login was more than 30 minutes ago -> new log in
-                        db.run('INSERT INTO log_users(timestamp, user) VALUES("' + time + '", "' + username + '")', function(err) {
-                            if (err) {                                                                          // catch errors
-                                return console.log(err.message);                                                // log
+                        // reset timestamp to indicate log out
+                        db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
+                            if (err) {                                                              // catch errors
+                                console.log('ERROR TRYING TO UPDATE THE DATABASE');
+                                return console.log(err.message);                                    // log
+                                
                             }
                         });
-                    }
                     
-                    db.run('UPDATE users SET timestamp = ' + time + ' WHERE username = "' + username + '";', function(err) {
-                        if (err) {                                                                              // catch errors
-                            return console.log(err.message);                                                    // log
-                        }
-                    });
-    
+                        db.close((err) => {                                                         // close database connection
+                            if (err) {                                                              // catch errors
+                                res.status(500).send('Internal Error');                             // send error information to client
+                                return console.error(err.message);                                  // log
+                            }
+                            
+                            res.status(200).send('OK');
+                            next();
+                        });
+                        break;
                     
-                    db.close((err) => {                                                                         // close database connection
-                        if (err) {                                                                              // catch errors
-                            res.status(500).send('Internal Error');                                             // send error information to client
-                            return console.error(err.message);                                                  // log
-                        }
-                        
-                        
-                        res.setHeader('WWW-Authenticate', 'Basic');
-                        switch(redirect) {
-                                case 'activity':
-                                    get_activity(req, res, next, username, role);
-                                    break;
-                                
-                                case 'permission':
-                                    res.status(200).send(role);
-                                    break;
-                                
-                                case 'req_logout':
-                                    db = new sqlite3.Database(path_db);                                         // connect to database
-                                
-                                    // reset timestamp to indicate log out
-                                    db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
-                                        if (err) {                                                              // catch errors
-                                            console.log('ERROR TRYING TO UPDATE THE DATABASE');
-                                            return console.log(err.message);                                    // log
-                                            
-                                        }
-                                    });
-                                
-                                    db.close((err) => {                                                         // close database connection
-                                        if (err) {                                                              // catch errors
-                                            res.status(500).send('Internal Error');                             // send error information to client
-                                            return console.error(err.message);                                  // log
-                                        }
-                                        
-                                        res.status(200).send('OK');
-                                        next();
-                                    });
-                                    break;
-                                
-                                case 'add_user':
-                                    // generate new has to store in the database
-                                    crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
-                                        if (err) throw err;                                                     // catch errors
-                                        
-                                        let hash = derivedKey.toString('hex');
-                                        add_user(req, res, next, req.query.username, hash, role);               // add a new user with the given username and the created hash
-                                    });
-                                    break;
-                                
-                                case 'change_password':
-                                    // generate new has to store in the database
-                                    crypto.pbkdf2(req.query.password, username, 100000, 64, 'sha512', (err, derivedKey) => {
-                                        if (err) throw err;                                                     // catch errors
-                                        
-                                        let hash = derivedKey.toString('hex');
-                                        change_password(req, res, next, username, hash);                        // add a new user with the given username and the created hash
-                                    });
-                                    break;
-                                
-                                case 'pressure':
-                                    get_data_cp(res, 'pressure', arg_dyn);
-                                    break;
-                                
-                                case 'fan_speed':
-                                    get_data_cp(res, 'fan_speed', arg_dyn);
-                                    break;
-                                
-                                case 'set_pressure':
-                                    send_target_pressure(req, res, next, arg_dyn);
-                                    break;
-                                case 'set_fan_speed':
-                                    send_target_fan_speed(req, res, next, arg_dyn);
-                                    break;
+                    case 'add_user':
+                        // generate new has to store in the database
+                        crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
+                            if (err) throw err;                                                     // catch errors
+                            
+                            let hash = derivedKey.toString('hex');
+                            add_user(req, res, next, req.query.username, hash, role);               // add a new user with the given username and the created hash
+                        });
+                        break;
+                    
+                    case 'change_password':
+                        // generate new has to store in the database
+                        crypto.pbkdf2(req.query.password, session.userid, 100000, 64, 'sha512', (err, derivedKey) => {
+                            if (err) throw err;                                                     // catch errors
+                            
+                            let hash = derivedKey.toString('hex');
+                            change_password(req, res, next, session.userid, hash);                        // add a new user with the given username and the created hash
+                        });
+                        break;
+                    
+                    case 'pressure':
+                        get_data_cp(res, 'pressure', arg_dyn);
+                        break;
+                    
+                    case 'fan_speed':
+                        get_data_cp(res, 'fan_speed', arg_dyn);
+                        break;
+                    
+                    case 'set_pressure':
+                        send_target_pressure(req, res, next, arg_dyn);
+                        break;
+                    case 'set_fan_speed':
+                        send_target_fan_speed(req, res, next, arg_dyn);
+                        break;
 
-                                case 'get_mode':
-                                    get_mode(req, res, next);
-                                    break;
-                                
-                                case 'set_mode':
-                                    set_mode(req, res, next, arg_dyn);
-                                    break;
-                                
-                                case 'get_target_values':
-                                    get_target_values(req, res, next);
-                                    break;
-                                
-                                default:
-                                    res.render(redirect, {username: username.charAt(0).toUpperCase() + username.slice(1)});     // make first letter uppercase
-                                    next();
-                                    break;
-                        }
-                    });
+                    case 'get_mode':
+                        get_mode(req, res, next);
+                        break;
                     
-                } else {                                                                                        // invalid login
-                    var err = new Error('You are not authenticated!');
-                    err.status = 401;
-                    return next(err);
-                }
-            });
-          });
-    }
+                    case 'set_mode':
+                        set_mode(req, res, next, arg_dyn);
+                        break;
+                    
+                    case 'get_target_values':
+                        get_target_values(req, res, next);
+                        break;
+                    
+                    default:
+                        res.render(redirect, {username: session.userid.charAt(0).toUpperCase() + session.userid.slice(1)});     // make first letter uppercase
+                        next();
+                        break;
+            }
+        } else {
+            res.render('logout',{root:__dirname, error: ''});
+        }
+    });
 }
 
 
