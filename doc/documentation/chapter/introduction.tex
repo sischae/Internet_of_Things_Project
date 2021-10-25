@@ -23,13 +23,32 @@ This technical documentation provides specific information about the implementat
 
 This project is based on Node which needs to be installed to run the server. Please visit \href{https://nodejs.org}{nodejs.org} and follow the instructions to install node (LTS or latest version). The following node packages are required to run the server. The packages can be installed by running \textit{"npm install <package>"}.
 
-\begin{itemize}
-	\item express
-    \item ejs
-    \item body-parser
-    \item sqlite3
-    \item ws
-\end{itemize}
+\begin{minipage}[t]{.1\textwidth} 
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+    \begin{itemize}\itemsep0pt
+        \item body-parser
+        \item express-session
+    \end{itemize}   
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item cookie-parser
+        \item sqlite3
+    \end{itemize}
+\end{minipage}%
+\begin{minipage}[t]{.15\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item ejs
+        \item ws
+    \end{itemize}
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item express
+    \end{itemize}
+\end{minipage}%
+\\
 
 The server also requires a running MQTT broker. To connect the server to a running broker, please open the \textit{/src/server.js} file and check the MQTT configuration section. Please enter the correct IP, port, and topics by adjusting the following parameters:
 
@@ -40,4 +59,6 @@ The server also requires a running MQTT broker. To connect the server to a runni
  const mqtt_topic_sub = "controller/status";
 \end{lstlisting}
 
-After installing the required packages and setting up the MQTT parameters, the server can be started by running \textit{"node src/server.js"}. The server display status information in the terminal if everything started up correctly.
+After installing the required packages and setting up the MQTT parameters, the server can be started by running \textit{"node src/server.js"}. The server display status information in the terminal if everything started up correctly.\\
+
+To sign in on the web interface, the \textit{admin} account can be used by signing in with the default password "\textit{admin}". The password can be changed at the setting page. The settings page also allows the admin account to add new users to the system.
