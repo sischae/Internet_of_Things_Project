@@ -16,7 +16,7 @@ The server provides users with all necessary information for using the web inter
 The server uses an SQLite database which is set up as a single global database to store all kinds of data.  The database (\textit{/src/data/data.db}) contains the following five tables to store data:
 
 \begin{lstlisting}[language = SQL, numbers = none, label={lst:global_database}]
- CREATE TABLE users(username TEXT, hash TEXT, timestamp INT, role TEXT);
+ CREATE TABLE users(username TEXT, hash TEXT, role TEXT);
  CREATE TABLE log_users(timestamp INT, user TEXT);
  CREATE TABLE pressure(timestamp INT, pressure INT);
  CREATE TABLE fan_speed(timestamp INT, fan_speed INT);
@@ -55,47 +55,44 @@ In this example, the server will pass all necessary parameters for authenticatin
 \section{Authentication and authorization}
 \label{sec:authentication_and_authorization}
 
-Authentication and authorization are both very important for this interface. Only logged-in users are allowed to open the page. Also, not every logged-in user has permission to use all available features. Therefore, on each request a client sends, the server will try to authenticate the user before providing any information. In this project, basic HTTP authentication is used to log in/log out users.\\
+Authentication and authorization are both very important for this interface. Only logged-in users are allowed to open the page. Also, not every logged-in user has permission to use all available features. Therefore, on each request a client sends, the server will try to authenticate the user before providing any information. In this project, session based authentication is used to authenticate users as well as to log them in and out.\\
 
 
 
 \subsection{Front end authentication}
 \label{subsec:front_end_authentication}
-When a user initially connects to the web interface, the server will return a 401 error code and ask for authentication. The browser will automatically show a form and ask the user to enter a username and a password. If the entered credentials are correct, the server will redirect to the landing page.
+When a user initially connects to the web interface, the server will automatically redirect to the logout page. There, the user can enter a username and a password which will then be sent to the server.
 
 Every page of the interface provides a log-out button, which enables the user to manually log out. 
-If a user logs out, the client will first send a basic get request to log out from the server. Then, the client sends an invalid authentication request and redirects to the logout page.
-Sending a separate logout request before the invalid authentication enables the server to tell apart the logout request from any other invalid authentication like logging in with incorrect credentials. This is important to keep track of the users that are currently logged in and can be used to log all login activities.
+If a user wants to log out, the client will send a basic get request to log out from the server. The server will log the user out and redirect to the logout page.
 
 
 
 \subsection{User database}
 \label{subsec:user_database}
 
-The \textit{users} table of the central database is used to store the login information of all users (chapter \ref{lst:global_database}). Next to the username and the hashed password, the table contains a timestamp of the users' last login (in milliseconds since 01.01.1970 00:00:00 UTC) as well as a role. The timestamp can be used to distinguish new logins and navigation between different subpages , but also for logging all login activities on the server (chapter \ref{subsec:user_authentication}). The role indicates whether the user has admin privileges or not.
+The \textit{users} table of the central database is used to store the login information of all users (chapter \ref{lst:global_database}). Next to the username and the hashed password, the table also contains a role parameter.  The role indicates whether the user has admin privileges or not.
+
+New entries to user database can be added by admins only. Aside from manually adding an entry by directly connecting to the database and adding data with SQL commands, the web interface also provides a form to add new users. This form also is available for admins only (chapter \ref{subsec:adding_a_new_user_to_the_system}).
 
 
 
 \subsection{Routing}
 \label{subsec:routing}
-All routes that the server handles require the client to authenticate before serving any page or data. The only exception to this is the \textit{/logout} route, that returns the \textit{views/logout.ejs} file to the client without authentication. All other routes call the function \textit{auth\_user(req, res, next, redirect)} (chapter \ref{subsec:user_authentication}) and pass a string of the requested redirect as a parameter. The function will check the authentication parameters provided by the client. If the provided information is valid, the function will call the requested function and return information to the client.
+All routes that the server handles require the client to authenticate before serving any page or data. The only exception to this is the \textit{/logout} route, which deletes the current session and returns the \textit{views/logout.ejs} file to the client without authentication. All other routes call the function \textit{auth\_user(req, res, next, redirect)} (chapter \ref{subsec:user_authentication}) and pass a string of the requested redirect as a parameter. The function will check the authentication parameters provided by the client. If the provided information is valid, the function will call the requested function and return information to the client.
 
 
 
-\subsection{User authentication}
+\subsection{Back end user authentication}
 \label{subsec:user_authentication}
-If a route is called by a client, it will call the \textit{auth\_user(req, res, next, redirect)} function with information about the requested service.  The function reads authorization parameters from the request body and checks if valid data was received. If so, the function generates a hash based on the provided username and password and compares it with the hashes stored in the database. If the username and password match the information in the database, the user is authenticated successfully.
-If a client was successfully authenticated, the function checks if the request was a new login or just an authenticated request for a page or service.  To do so, the current time is being compared to the users' timestamp in the database. Three cases can be detected that way:
 
-\begin{itemize}
-  \item[$\bullet$] If the timestamp equals zero, it either is still zero from its first initialization or has been reset during a logout procedure. Therefore, the client is performing a new login. Then, the login will get logged and the timestamp in the users' database entry will get updated.
-  \item[$\bullet$] If the difference between the current time and the timestamp of the users' last login is greater than 30 minutes, the request will be interpreted as a new login.  Then, the login request will get logged and the timestamp in the users' database entry will get updated.
-  \item[$\bullet$]  If the difference between the current time and the timestamp of the users' last login is less than 30 minutes, the request will be interpreted as a request for changing the page or fetching data. The timestamp will not get updated and the request will not get logged in the database.
-\end{itemize}
+Session-based authentication uses session cookies to authenticate users.  To log in, the client sends the username and password to the server using a POST request. Then, the \textit{login\_user} method generates a hash based on the provided username and password and compares it with the hashes stored in the database. If the username and password match the information in the database, the user is authenticated successfully. The server will then create a new session with a unique session ID. This ID will be returned to the client as a session cookie and will be appended to all following requests to the server.
 
-After detecting a new login by checking the conditions explained above, the server will add a new row to the \textit{log\_users} table (chapter \ref{lst:global_database}) with a current timestamp and the current username.
+When a user has signed in, the server needs to keep track of this activity. After connecting to the database, a new entry will be added to the \textit{log\_users} table (chapter \ref{sec:global_database}). This allows the server to provide a list of all login activities of all users which can then get displayed on the settings page of the web interface (chapter \ref{sec:settings_page}).
 
-After deciding, if the database needs to get updated because of a new login, the function switches depending on the passed \textit{redirect} parameter. If a page is requested, the parameter will directly include the filename of the page that should be rendered. Otherwise, the corresponding function will get called to perform actions and return the requested data to the client.
+Every time another request is received from any client, the server needs to check if the client is authenticated before executing any method or returning any data. Therefore, all routes call the method \textit{auth\_user(req, res, next, redirect, arg\_dyn = '')} and pass all necessary connection parameters as well as information about the requested redirect. This function checks, if the user is authenticated and logged in by comparing the passed session ID with the currently active sessions. If no session ID or an invalid one has been received, the server will redirect to the logout page and ask the user to sign in.  If the session ID is valid, the server reads the users' permission from the database as this is relevant for some functionalities. After authenticating the user, the function returns the requested page or calls a method to perform specific actions depending on the \textit{redirect} parameter. This parameter can either contain a direct path of a file that should be returned, but can also indicate a number of functions that need to be called.
+
+If the user wants to sign out, the client sends a get request to the \textit{/req\_logout} route. After receiving this request, the server will delete the current session and redirect the user to the logout page. Deleting the session will automatically invalidate all incoming requests with the former session ID. The user is logged out.
 
 
 

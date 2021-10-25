@@ -235,8 +235,12 @@ Although, with this implementation, the client would display the same warning ea
 % Logging a user out
 %--------------------------------------------------------------------------------------------------
 
-\section{Logging a user out}
-\label{sec:logging_a_user_out}
+\section{Login/logout page}
+\label{sec:login_and_logout_page}
+
+The login/logout page is the only page of the web interface that does not show the navigation menu as those pages can only be accessed by logged in users. The only thing the login page provides is a form to enter a username and a password. After submitting, the client will send a post request to the server. If the entered credentials are valid, the server will return a session cookie (chapter \ref{subsec:user_authentication}) and redirect to the control panel. Otherwise, the server will rerender the login page. Rendering the login page as an ejs file allows the server to pass parameters. In this case, the server will pass an \textit{error} text which will be displayed underneath the form if the entered username or password are not correct.
+
+
 
 
 
