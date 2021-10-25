@@ -666,7 +666,7 @@ LOGOUT PAGE
     padding: 10px;
     margin: 40px;
     margin-top: 25px;
-    flex-basis: 60%;
+    /*flex-basis: 20%;*/
     min-width: 350px;
     
     border-radius: 10px;
@@ -691,6 +691,32 @@ LOGOUT PAGE
     width: 20%;
     padding-top: 3em;
     filter: invert(0) sepia(1) saturate(20) hue-rotate(160deg);
+}
+
+.logout_form {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-field {
+    position: relative;
+    margin-top: 2rem;
+}
+
+.input-field input {
+    border-radius: 4px;
+    padding: 0.8rem;
+}
+
+.logout_form .input-field:first-child {
+    margin-bottom: 1.5rem;
+}
+
+.logout_form input[type="submit"] {
+    background: #90fbff;
+    border-radius: 4px;
+    color: black;
+    width: 170px;
 }
 
 

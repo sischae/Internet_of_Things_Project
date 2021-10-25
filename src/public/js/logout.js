@@ -1,11 +1,6 @@
 'use strict';
 
 
-/******************************************************************************************
-LOGOUT PAGE
-******************************************************************************************/
-
-var logout_button_back = document.getElementById("logout_button_back");
-var logout_button_next = document.getElementById("logout_button_next");
-
-
+if(document.getElementById("label_error").innerHTML != '') {
+    document.getElementById("spacer").style.height = "44px";
+}
