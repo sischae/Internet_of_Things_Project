@@ -16,31 +16,30 @@
             </div>
             
             <div class="flex_menu" id="flex_menu">
-                <a href="/" class="flex_menu_text_inactive" id="menu_logout_text">
-                    Log in
-                </a>
-                <a href="/" id="logout" class="flex_menu_item" >
-                    <img src="/public/img/login_black_24dp.svg" class="menu_icon_inactive" />
-                </a>
             </div>
         </div>
         
-        
-        
-        
+
  
         <div class="flex_logout">
             <div class="flex_logout_box">
-                <img src="/public/img/logout_black_24dp.svg" alt="logout icon" class="logout_icon" />
-
-                <p>You have been logged out successfully!</p>
-                <p>Thank you for using VentPro!</p>
-
-                <a href="/" class="flex_menu_text_inactive">
-                    Log back in
-                </a>
+                <form action="/login_user" class="logout_form" id="login_form" method="post">
+                    <h3>You are currently logged out</h3>
+                    <label style="margin-top: 30px;">Please log in to use VentPro.</label>
+                    <div class="input-field">
+                        <input type="text" name="username" id="username" placeholder="Enter Username">
+                    </div>
+                    <div class="input-field">
+                        <input type="password" name="password" id="password" placeholder="Enter Password">
+                    </div>
+                    <div class="input-field">
+                        <input type="submit" value="Log in">
+                    </div>
+                </form>
                 
-                <div style="height: 200px">
+                <label style="color: red; font-size: 14px; margin-top: 20px;" id="label_error"><%= error %></label>
+                
+                <div style="height: 60px; width: 300px;" id="spacer">
                 </div>
             </div>
         </div>

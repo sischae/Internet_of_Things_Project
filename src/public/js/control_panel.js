@@ -4,44 +4,56 @@
 LOGOUT
 ******************************************************************************************/
 
-document.getElementById("logout").addEventListener("click", function() {
-    // send request to officially log out
-    var logout_request = new XMLHttpRequest();
-    logout_request.open( "GET", '/req_logout', false );
-    logout_request.send( null );
+document.getElementById("logout").addEventListener("click", function(e) {
+    e.preventDefault();
     
-    // send invalid request to log out
-    var logout = new XMLHttpRequest();
-    logout.open("GET", "/logout", true, "invalid", "invalid");
-    logout.send();
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
+    });
+});
 
-    // forward user to logout page
-    setTimeout(function () {
-        window.location.href = "/logout";
-    }, 10);
+document.getElementById("menu_logout_text").addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
+    });
 });
 
 
-function add_logout_listener() {
-    document.getElementById("menu_logout_text").addEventListener("click", function() {
-        // send request to officially log out
-        var logout_request = new XMLHttpRequest();
-        logout_request.open( "GET", '/req_logout', false );
-        logout_request.send( null );
-        
-        // send invalid request to log out
-        var logout = new XMLHttpRequest();
-        logout.open("GET", "/logout", true, "invalid", "invalid");
-        logout.send();
-
-        // forward user to logout page
-        setTimeout(function () {
-            window.location.href = "/logout";
-        }, 10);
-    });
+function logout (done) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/logout", true, "invalid", "invalid");
+    xhr.onload = function () {
+        done(null, xhr.response);
+    };
+    xhr.onerror = function () {
+        done(xhr.response);
+    };
+    xhr.send();
 }
-
-add_logout_listener();
 
 
 
@@ -57,8 +69,10 @@ var cur_mode = 0;
 document.getElementById("mode_switch").addEventListener("click", function() {
     if(!document.getElementById("mode_switch").checked) {
         set_mode(0);                                                                                                        // AUTOMATIC MODE
+        send_cmd('set_pressure', input_pressure.value);
     } else {
         set_mode(1);                                                                                                        // MANUAL MODE
+        send_cmd('set_fan_speed', input_fan_speed.value);
     }
 });
 
@@ -213,10 +227,10 @@ function display_plot_fan_speed() {
                 label: 'current fan speed',
                 data: fan_speed_y,
                 backgroundColor: [
-                    'rgba(28, 188, 196, 0.2)'
+                    'rgba(30, 128, 133, 0.2)'
                 ],
                 borderColor: [
-                    'rgba(28, 188, 196, 1)'
+                    'rgba(30, 128, 133, 1)'
                 ],
                 borderWidth: 1,
                 tension: 0.4
@@ -345,6 +359,7 @@ document.getElementById("btn_fan_speed_minute").addEventListener("click", functi
 /******************************************************************************************
 SET TARGET VALUES
 ******************************************************************************************/
+
 var input_pressure = document.getElementById("target_pressure");
 var input_fan_speed = document.getElementById("target_fan_speed");
 
@@ -356,6 +371,14 @@ input_pressure.addEventListener('change', e => {
 input_fan_speed.addEventListener('change', e => {
     document.getElementById("label_target_fan_speed").innerHTML = input_fan_speed.value + '%';
     send_cmd('set_fan_speed', input_fan_speed.value);
+});
+
+input_pressure.addEventListener('input', e => {
+    document.getElementById("label_target_pressure").innerHTML = input_pressure.value + 'Pa';
+});
+
+input_fan_speed.addEventListener('input', e => {
+    document.getElementById("label_target_fan_speed").innerHTML = input_fan_speed.value + '%';
 });
 
 
@@ -380,6 +403,7 @@ function get_target_values() {
     });
 }
 get_target_values();
+
 
 
 /******************************************************************************************
@@ -408,6 +432,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             } else if (plot_pressure_interval == 'day') {
@@ -418,6 +443,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             } else if (plot_pressure_interval == 'minute') {
@@ -435,6 +461,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_pressure.data.datasets.forEach(dataset => {
                     dataset.data = pressure_y;
+                    dataset.label = 'current pressure: ' + msg.pressure + 'Pa';
                   });
                 plot_pressure.update();
             }
@@ -448,6 +475,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             } else if (plot_fan_speed_interval == 'day') {
@@ -458,6 +486,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             } else if (plot_fan_speed_interval == 'minute') {
@@ -475,6 +504,7 @@ ws_client.onopen = () => {
                 //plot_pressure.labels = pressure_x;
                 plot_fan_speed.data.datasets.forEach(dataset => {
                     dataset.data = fan_speed_y;
+                    dataset.label = 'current speed: ' + msg.speed + '%';
                   });
                 plot_fan_speed.update();
             }
@@ -482,15 +512,29 @@ ws_client.onopen = () => {
             
             // check for error
             if(msg.error) {
-                alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+                let recent_error = 0;
+                
+                try {
+                    recent_error = document.cookie.split('; ').find(row => row.startsWith('error=')).split('=')[1];
+                } catch (e) {
+                    document.cookie = "error=" + msg.error;
+                    
+                }
+                
+                if(recent_error != msg.error) {
+                    document.cookie = "error=" + msg.error;
+                    alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+                }
             }
         }
     };
 };
 
 
-
-
+window.onbeforeunload = function() {
+    ws_client.onclose = function () {};                                                                 // disable onclose handler
+    ws_client.close();                                                                                  // close websocket connection
+};
 
 
 

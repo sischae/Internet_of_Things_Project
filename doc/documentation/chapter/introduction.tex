@@ -1,2 +1,64 @@
+%--------------------------------------------------------------------------------------------------
+% Introduction
+%--------------------------------------------------------------------------------------------------
+
 \chapter{Introduction}
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.\\
+\label{ch:introduction}
+
+VentPro is a web interface for controlling an ABB ventilation controller. The interface displays all available information about the connected IoT device and enables the user to control the ventilation system using a website. 
+
+The system consists of an IoT device, a server, and a web interface. The IoT device controls the speed of a connected fan and measures the current air pressure regularly. The device is connected to the server which provides the web interface allowing users to set a specific pressure or fan speed. Also, the interface displays current and former sensor data received from the IoT device to the user.
+
+This technical documentation provides specific information about the implementation of both the front end and back end of the system. It does not include any descriptions of how to use the web interface itself. This information can be found in the  \href{https://github.com/sischae/Internet_of_Things_Project/raw/main/doc/user_manual/user_manual.pdf}{user manual}.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
+% Installation
+%--------------------------------------------------------------------------------------------------
+
+\section*{Installation}
+\label{sec:installation}
+
+This project is based on Node which needs to be installed to run the server. Please visit \href{https://nodejs.org}{nodejs.org} and follow the instructions to install node (LTS or latest version). The following node packages are required to run the server. The packages can be installed by running \textit{"npm install <package>"}.
+
+\begin{minipage}[t]{.1\textwidth} 
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+    \begin{itemize}\itemsep0pt
+        \item body-parser
+        \item express-session
+    \end{itemize}   
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item cookie-parser
+        \item sqlite3
+    \end{itemize}
+\end{minipage}%
+\begin{minipage}[t]{.15\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item ejs
+        \item ws
+    \end{itemize}
+\end{minipage}%
+\begin{minipage}[t]{.25\textwidth}
+        \begin{itemize}\itemsep0pt
+        \item express
+    \end{itemize}
+\end{minipage}%
+\\
+
+The server also requires a running MQTT broker. To connect the server to a running broker, please open the \textit{/src/server.js} file and check the MQTT configuration section. Please enter the correct IP, port, and topics by adjusting the following parameters:
+
+\begin{lstlisting}[language = Java, numbers = none]
+ const mqtt_ip = "mqtt://localhost";
+ const mqtt_port = "1883";
+ const mqtt_topic_pub = "controller/settings";
+ const mqtt_topic_sub = "controller/status";
+\end{lstlisting}
+
+After installing the required packages and setting up the MQTT parameters, the server can be started by running \textit{"node src/server.js"}. The server displays status information in the terminal if everything started up correctly.\\
+
+To sign in on the web interface, the \textit{admin} account can be used by signing in with the default password "\textit{admin}". The password can be changed at the setting page. The settings page also allows the admin account to add new users to the system.

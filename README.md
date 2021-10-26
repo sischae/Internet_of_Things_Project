@@ -3,18 +3,24 @@
 
 ## Description
 
-This project implements the front and back end for a web interface to control an ABB ventilation controler. The interface is for displaying information from and Issuing commands to the ABB ventilation controller simulator. The simulator has two modes (Automatic and Manual) which can be toggled from the web interface.
-
+VentPro is a web interface for controlling an ABB ventilation controller. The interface displays all available information about the connected IoT device and enables the user to control the ventilation system using a website.
+The system consists of an IoT device, a server, and a web interface. The IoT device controls the speed of a connected fan and measures the current air pressure regularly. The device is connected to the server which provides the web interface allowing users to set a specific pressure or fan speed. Also, the interface displays current and former sensor data received from the IoT device to the user.
 
 ## Installation
 
 The project requires Node (LTS or latest version). Node can be installed via https://nodejs.org/.
 The following packages are necessary to run the code. Install packages using "npm install [package]".
+  - body-parser
+  - cookie-parser
   - express
   - ejs
-  - body-parser
+  - express-session
   - sqlite3
   - ws  
+
+The initial admin passwort is "admin" and can be used to sign in on the web interface. Please change the admin password on the settings page afterward.
+
+Further information about setting up the server can be found at chapter 1.1 Installation of the [Technical Documentation](https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf).
   
 ## Usage
 

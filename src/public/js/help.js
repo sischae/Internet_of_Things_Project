@@ -4,43 +4,56 @@
 LOGOUT
 ******************************************************************************************/
 
-document.getElementById("logout").addEventListener("click", function() {
-    // send request to officially log out
-    var logout_request = new XMLHttpRequest();
-    logout_request.open( "GET", '/req_logout', false );
-    logout_request.send( null );
+document.getElementById("logout").addEventListener("click", function(e) {
+    e.preventDefault();
     
-    // send invalid request to log out
-    var logout = new XMLHttpRequest();
-    logout.open("GET", "/logout", true, "invalid", "invalid");
-    logout.send();
-
-    // forward user to logout page
-    setTimeout(function () {
-        window.location.href = "/logout";
-    }, 10);
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
+    });
 });
 
-function add_logout_listener() {
-    document.getElementById("menu_logout_text").addEventListener("click", function() {
-        // send request to officially log out
-        var logout_request = new XMLHttpRequest();
-        logout_request.open( "GET", '/req_logout', false );
-        logout_request.send( null );
-        
-        // send invalid request to log out
-        var logout = new XMLHttpRequest();
-        logout.open("GET", "/logout", true, "invalid", "invalid");
-        logout.send();
-
-        // forward user to logout page
-        setTimeout(function () {
-            window.location.href = "/logout";
-        }, 10);
+document.getElementById("menu_logout_text").addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
     });
-}
+});
 
-add_logout_listener();
+
+function logout (done) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/logout", true, "invalid", "invalid");
+    xhr.onload = function () {
+        done(null, xhr.response);
+    };
+    xhr.onerror = function () {
+        done(xhr.response);
+    };
+    xhr.send();
+}
 
 
 
@@ -55,14 +68,52 @@ var last_err = false;
 
 ws_client.onopen = () => {
     
-    ws_client.send('connect_help');                                                                                           // connect as control panel
+    ws_client.send('connect_help');                                                                     // connect as control panel
     
     ws_client.onmessage = (message) => {
         let msg = JSON.parse(message.data);
         
         if(msg.id == "error") {
-            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            let recent_error = 0;
+            
+            try {
+                recent_error = document.cookie.split('; ').find(row => row.startsWith('error=')).split('=')[1];
+            } catch (e) {
+                document.cookie = "error=" + msg.error;
+                
+            }
+            
+            if(recent_error != msg.error) {
+                document.cookie = "error=" + msg.error;
+                alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            }
         }
     };
 };
 
+
+window.onbeforeunload = function() {
+    ws_client.onclose = function () {};                                                                 // disable onclose handler
+    ws_client.close();                                                                                  // close websocket connection
+};
+
+
+
+
+/******************************************************************************************
+ACCORDION
+******************************************************************************************/
+
+var acc = document.getElementsByClassName("accordion");
+var i;
+for (i = 0; i < acc.length; i++) {
+acc[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var panel = this.nextElementSibling;
+    if (panel.style.maxHeight) {
+    panel.style.maxHeight = null;
+    } else {
+    panel.style.maxHeight = panel.scrollHeight + "px";
+    }
+});
+}

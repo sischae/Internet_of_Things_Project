@@ -54,8 +54,9 @@
                      <!-- <span><b>subjects:</b></span> -->
                              <span><a href="#faq_control_panel">control panel</a></span>
                              <span class="trenner"> • </span>
-                    
-                             <span><a href="#faq_settings">settings</a></span> 
+                             <span><a href="#faq_settings">settings</a></span>
+                             <span class="trenner"> • </span>
+                             <span><a href="https://github.com/sischae/Internet_of_Things_Project/raw/main/doc/user_manual/user_manual.pdf" target="_blank">download manual</a></span>
                 </div>
                 
                 <div class="help-section">
@@ -68,7 +69,6 @@
                                             In VentPro it is possible to change between <b></b>automatic</b> and <b>manual mode</b>.
                                             This is possible by switching the button on the control panel page.
                                         </p>
-                                        <img src="../public/img/help-images/change-mode.png">
                                     </div>
                                 <button class="accordion">What is the <b>difference</b> between <b>automatic</b> mode and <b>manual</b> mode?</button>
                                     <div class="panel"> 
@@ -142,20 +142,5 @@
         
         
         <script async src="./public/js/help.js"></script>
-        <script>
-                var acc = document.getElementsByClassName("accordion");
-                var i;
-                for (i = 0; i < acc.length; i++) {
-                acc[i].addEventListener("click", function() {
-                    this.classList.toggle("active");
-                    var panel = this.nextElementSibling;
-                    if (panel.style.maxHeight) {
-                    panel.style.maxHeight = null;
-                    } else {
-                    panel.style.maxHeight = panel.scrollHeight + "px";
-                    }
-                });
-                }
-            </script>
     </body>
 </html>

@@ -4,48 +4,56 @@
 LOGOUT
 ******************************************************************************************/
 
-document.getElementById("logout").addEventListener("click", function() {
-    logout();
+document.getElementById("logout").addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
+    });
+});
+
+document.getElementById("menu_logout_text").addEventListener("click", function(e) {
+    e.preventDefault();
+    
+    fetch('/req_logout', {
+        method: 'get',
+    }).then(res => {
+        if(res.status == 200) {
+            logout(function (err) {
+                if (err) {
+                    throw err;
+                }
+                
+                ws_client.close();                                                                      // close websocket connection
+                window.location.href = "/logout";
+            });
+        }
+    });
 });
 
 
-function logout() {
-    // send request to officially log out
-    var logout_request = new XMLHttpRequest();
-    logout_request.open( "GET", '/req_logout', false );
-    logout_request.send( null );
-    
-    // send invalid request to log out
-    var logout = new XMLHttpRequest();
-    logout.open("GET", "/logout", true, "invalid", "invalid");
-    logout.send();
-
-    // forward user to logout page
-    setTimeout(function () {
-        window.location.href = "/logout";
-    }, 10);
+function logout (done) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/logout", true, "invalid", "invalid");
+    xhr.onload = function () {
+        done(null, xhr.response);
+    };
+    xhr.onerror = function () {
+        done(xhr.response);
+    };
+    xhr.send();
 }
-
-function add_logout_listener() {
-    document.getElementById("menu_logout_text").addEventListener("click", function() {
-        // send request to officially log out
-        var logout_request = new XMLHttpRequest();
-        logout_request.open( "GET", '/req_logout', false );
-        logout_request.send( null );
-        
-        // send invalid request to log out
-        var logout = new XMLHttpRequest();
-        logout.open("GET", "/logout", true, "invalid", "invalid");
-        logout.send();
-
-        // forward user to logout page
-        setTimeout(function () {
-            window.location.href = "/logout";
-        }, 10);
-    });
-}
-
-add_logout_listener();
 
 
 
@@ -292,7 +300,27 @@ ws_client.onopen = () => {
         let msg = JSON.parse(message.data);
         
         if(msg.id == "error") {
-            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            let recent_error = 0;
+            
+            try {
+                recent_error = document.cookie.split('; ').find(row => row.startsWith('error=')).split('=')[1];
+            } catch (e) {
+                document.cookie = "error=" + msg.error;
+                
+            }
+            
+            if(recent_error != msg.error) {
+                document.cookie = "error=" + msg.error;
+                alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            }
         }
     };
 };
+
+
+window.onbeforeunload = function() {
+    ws_client.onclose = function () {};                                                                 // disable onclose handler
+    ws_client.close();                                                                                  // close websocket connection
+};
+
+
