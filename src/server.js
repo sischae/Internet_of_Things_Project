@@ -437,6 +437,7 @@ function change_password(req, res, next, username, hash) {
     // reopen database to add a new user
     let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                                   // connect to database
         if (err) {                                                                                              // catch errors
+            res.status(500).send('Internal Error');                                                             // send error information to client
             return console.error(err.message);
         }
     });
@@ -444,6 +445,7 @@ function change_password(req, res, next, username, hash) {
     // change password
     db.run('UPDATE users SET hash = "' + hash + '" WHERE username = "' + username + '"', function(err) {
         if (err) {                                                                                              // catch errors
+            res.status(500).send('Internal Error');                                                             // send error information to client
             return console.log(err.message);                                                                    // log
         }
     });
@@ -909,7 +911,10 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
                     case 'change_password':
                         // generate new has to store in the database
                         crypto.pbkdf2(req.query.password, session.userid, 100000, 64, 'sha512', (err, derivedKey) => {
-                            if (err) throw err;                                                     // catch errors
+                            if (err) {
+                                res.status(500).send('Internal Error');                             // send error information to client
+                                throw err;                                                          // catch errors
+                            }
                             
                             let hash = derivedKey.toString('hex');
                             change_password(req, res, next, session.userid, hash);                        // add a new user with the given username and the created hash
