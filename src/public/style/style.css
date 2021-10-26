@@ -704,8 +704,10 @@ LOGOUT PAGE
 }
 
 .input-field input {
-    border-radius: 4px;
-    padding: 0.8rem;
+    font-size: 20px;
+    border: 0px;
+    border-bottom: 2px solid grey;
+    margin-top: 15px;
 }
 
 .logout_form .input-field:first-child {
@@ -713,10 +715,15 @@ LOGOUT PAGE
 }
 
 .logout_form input[type="submit"] {
-    background: #90fbff;
-    border-radius: 4px;
-    color: black;
     width: 170px;
+    font-size: 18px;
+    font-weight: 600;
+    padding: 0.2em 0.5em;
+    margin-left: 0.5em;
+    border-radius: 5px;
+    background-color: hsla(182, 100%, 78%, 0.4);
+    color:rgba(30,128,133,1);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
 
