@@ -170,7 +170,7 @@ The client displays a text input and a button to enable the user to set a new pa
 
 When the server receives the request to change the password from an authenticated user, it does not need to check permissions. All users are authorized to change their passwords. The server just generates a hash based on the username and the new password and updates the users' entry in the database. The server then will return a status message with a status code.
 
-When the client receives the result from the server, it will clear the input and display an alert to inform the user whether the password was successfully changed or not. If the password was changed, the user needs to log in with the new credentials. For user experience purposes, the client will automatically log out the user and redirect to the logout page.
+When the client receives the result from the server, it will clear the input and display an alert to inform the user whether the password was successfully changed or not. The client does not automatically log out the user. Users can keep using the interface without any restrictions right away. However, the next time the user wants to log in, the new password is required.
 
 
 

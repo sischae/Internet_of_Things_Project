@@ -32,7 +32,7 @@ The \textit{users} table contains the login information about all registered use
 % Routing
 %--------------------------------------------------------------------------------------------------
 
-\section{Routing}
+\section{Routing requests}
 \label{sec:routing}
 
 The server uses Express to manage the routing. To prevent unauthenticated users from accessing data, every route refers to the \textit{auth\_user(req, res, next, redirect, arg\_dyn = ' ')} function to authenticate users and to check their permissions (chapter \ref{sec:authentication_and_authorization}.) The following example shows the routing for \textit{/control\_panel}:
@@ -77,9 +77,9 @@ New entries to user database can be added by admins only. Aside from manually ad
 
 
 
-\subsection{Routing}
+\subsection{Middleware}
 \label{subsec:routing}
-All routes that the server handles require the client to authenticate before serving any page or data. The only exception to this is the \textit{/logout} route, which deletes the current session and returns the \textit{views/logout.ejs} file to the client without authentication. All other routes call the function \textit{auth\_user(req, res, next, redirect)} (chapter \ref{subsec:user_authentication}) and pass a string of the requested redirect as a parameter. The function will check the authentication parameters provided by the client. If the provided information is valid, the function will call the requested function and return information to the client.
+All routes the server handles require the client to authenticate before serving any page or data. The only exception to this is the \textit{/logout} route, which deletes the current session and returns the \textit{views/ logout.ejs} file to the client without authentication. All other routes call the function \textit{auth\_user(req, res, next, redirect)} (chapter \ref{subsec:user_authentication}) and pass a string of the requested redirect as a parameter. The function will check the authentication parameters provided by the client. If the provided information is valid, the function will call the requested function and return information to the client.
 
 
 
@@ -129,7 +129,7 @@ The server needs to check permissions and send only the data the client is allow
 
 
 
-\subsection{Changing the password}
+\subsection{Changing a users' password}
 \label{subsec:changing_the_password}
 
 Each users' password is saved as a hashed value in the database. If a user sends a request to change the password, the server first needs to generate a new hash using a PBKDF2 function. The server uses the username as the salt parameter and generates a 64-bit hash by iterating 10.000 times:
@@ -147,7 +147,7 @@ After a new hash has been generated, the server connects to the database and upd
 
 
 
-\subsection{Adding a new user}
+\subsection{Adding a new user to the database}
 \label{subsec:adding_a_new_user}
 
 Adding a new user works quite similarly to changing a password, but this is allowed to users with admin privileges only. The server checks the users' permission (chapter \ref{subsec:user_authorization}) and generates a new hash just as described in chapter \ref{subsec:changing_the_password} with the difference that the hash is being generated based on the passes parameters (username, password) instead of the current users' credentials. After generating the has, the server adds a new entry to the \textit{users} table of the database with the new username and hash. The server then returns a response with a status code to tell the client if the requested action could be performed successfully.
