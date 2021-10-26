@@ -74,9 +74,27 @@ ws_client.onopen = () => {
         let msg = JSON.parse(message.data);
         
         if(msg.id == "error") {
-            alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            let recent_error = 0;
+            
+            try {
+                recent_error = document.cookie.split('; ').find(row => row.startsWith('error=')).split('=')[1];
+            } catch (e) {
+                document.cookie = "error=" + msg.error;
+                
+            }
+            
+            if(recent_error != msg.error) {
+                document.cookie = "error=" + msg.error;
+                alert('[WARNING]\r\nThe target pressure was set to ' + msg.setpoint + 'Pa but could not be reached in a reasonable time!\r\nCurrent pressure: ' + msg.pressure + 'Pa');
+            }
         }
     };
+};
+
+
+window.onbeforeunload = function() {
+    ws_client.onclose = function () {};                                                                 // disable onclose handler
+    ws_client.close();                                                                                  // close websocket connection
 };
 
 

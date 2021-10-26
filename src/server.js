@@ -36,6 +36,9 @@ const mqtt_topic_pub = "controller/settings";
 const mqtt_topic_sub = "controller/status";
 
 
+let error_last = false;                                                                                     // indicator to detect a new error via MQTT
+var recent_error_id = 0;                                                                                    // ID for most recent error
+
 // setup connection
 var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
 mqtt_client.on("connect",function(){
@@ -47,6 +50,21 @@ console.log('Connected to MQTT broker. Subscribing to ' + mqtt_topic_sub);
 
 mqtt_client.on('message',function(topic, message, packet) {
     let msg = JSON.parse(message);                                                                          // parse received data
+    
+    // check for error
+    if(msg.error) {
+        if(!error_last) {
+            let tim_now = Date.now();
+            if(tim_now - recent_error_id > 20 * 1000) {                                                     // new errors possible every 20s
+                recent_error_id = tim_now;
+            }
+        }
+        error_last = true;
+    } else {
+        error_last = false;
+        recent_error_id = 0;
+    }
+    
     mqtt_msg_to_db(msg.nr, msg.speed, msg.setpoint, msg.pressure, msg.auto, msg.error);                     // add received data to the database
 });
 
@@ -61,10 +79,11 @@ WEBSOCKET SETUP
 var webSocketServer = new (require('ws')).Server({port: (process.env.PORT || 8000)}), webSockets = {};
 console.log('WebSocket server running. Listening on port 8000...');
 
+
 // handle incoming connections from clients
 webSocketServer.on('connection', (ws, req) => {
-    let error_last = false;                                                                                     // indicator to detect a new error via MQTT
-    let client_cp = false;                                                                                      // control panel: true, other pages: false
+    let client_cp = false;                                                                                  // control panel: true, other pages: false
+    let last_error = 0;
     
     // identify client (important for closing the connection later on)
     const key = req.headers['sec-websocket-key'];
@@ -92,34 +111,18 @@ webSocketServer.on('connection', (ws, req) => {
     // subscribe to MQTT topic and forward data
     mqtt_client.subscribe(mqtt_topic_sub);
     mqtt_client.on('message',function(topic, message, packet) {
-        let msg_received = JSON.parse(message);                                                                 // parse received data
+        let msg_received = JSON.parse(message);                                                             // parse received data
         
-        if(client_cp) {                                                                                         // send data to control panel only
-            let msg_send = JSON.parse('{"id": "data", "speed": ' + msg_received.speed + ', "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + msg_received.error + '}');
+        if(client_cp) {                                                                                     // send data to control panel only
+            ws.send('{"id": "data", "speed": ' + msg_received.speed + ', "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
             
-            // check for error
-            if(msg_send.error) {
-                if(!error_last) {
-                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
-                } else {
-                    msg_send.error = false;                                                                     // do not send error
-                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
-                }
-                error_last = true;
-            } else {
-                msg_send.error = false;                                                                         // do not send error
-                ws.send(JSON.stringify(msg_send));                                                              // forward new data to the client
-                error_last = false;
-            }
         } else {
             // check for error
             if(msg_received.error) {
-                if(!error_last) {
-                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + '}');
+                if(last_error != recent_error_id) {
+                    last_error = recent_error_id;
+                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
                 }
-                error_last = true;
-            } else {
-                error_last = false;
             }
         }
     });
@@ -132,13 +135,13 @@ webSocketServer.on('connection', (ws, req) => {
 SESSIONS SETUP
 ******************************************************************************************/
 
-const cookie_maxAge = 1000 * 60 * 60 * 1;                                                                       // set max age of authentication cookies to one hour
+const cookie_maxAge = 1000 * 60 * 60 * 1;                                                                   // set max age of authentication cookies to one hour
 
 app.use(sessions({
     secret: "mccTzR1OxRh4DCvnegXgzNt1JvedKAtf70BhpDfJYdqVuVBuUWM5PMsdZTEx+4F190U1QaeI7Yzya0ZJ3IR2nw==",
-    saveUninitialized:true,                                                                                     // allow uninitialized sessions
-    cookie: { maxAge: cookie_maxAge },                                                                          // set expiry date
-    resave: false                                                                                               // prevent hazards
+    saveUninitialized:true,                                                                                 // allow uninitialized sessions
+    cookie: { maxAge: cookie_maxAge },                                                                      // set expiry date
+    resave: false                                                                                           // prevent hazards
 }));
 
 // parse incoming data
@@ -267,17 +270,17 @@ MQTT DATA LOGGING AND FORWARDING
 function mqtt_msg_to_db(nr, speed, setpoint, pressure, auto, error) {
     
     // PROTOTYPE FUNCTION WRITING EXAMPLE DATA RECEIVED IN A WRING FORMAT
-    let db = new sqlite3.Database(path_db);                                                                     // connect to database
+    let db = new sqlite3.Database(path_db);                                                                 // connect to database
     
     db.run('INSERT INTO pressure(timestamp, pressure) VALUES(' + Date.now() + ', ' + pressure + ')', function(err) {
-        if (err) {                                                                                              // catch errors
-            return console.log(err.message);                                                                    // log
+        if (err) {                                                                                          // catch errors
+            return console.log(err.message);                                                                // log
         }
     });
     
     db.run('INSERT INTO fan_speed(timestamp, fan_speed) VALUES(' + Date.now() + ', ' + speed + ')', function(err) {
-        if (err) {                                                                                              // catch errors
-            return console.log(err.message);                                                                    // log
+        if (err) {                                                                                          // catch errors
+            return console.log(err.message);                                                                // log
         }
     });
 
@@ -298,8 +301,8 @@ function get_activity(req, res, next, username, role) {
     let log = JSON.parse('[]');
     
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                                   // connect to database
-        if (err) {                                                                                              // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
             return console.error(err.message);
         }
     });
@@ -308,9 +311,9 @@ function get_activity(req, res, next, username, role) {
     if(role == 'admin') {
         // fetch all entries
         db.serialize(() => {
-            db.each(`SELECT timestamp as timestamp, user as user FROM log_users`, (err, row) => {               // read all entries from table
-            if (err) {                                                                                          // catch errors
-                console.error(err.message);                                                                     // log
+            db.each(`SELECT timestamp as timestamp, user as user FROM log_users`, (err, row) => {           // read all entries from table
+            if (err) {                                                                                      // catch errors
+                console.error(err.message);                                                                 // log
             }
             
             let time = new Date(row.timestamp)
@@ -322,8 +325,8 @@ function get_activity(req, res, next, username, role) {
         // fetch users entries
         db.serialize(() => {
             db.each(`SELECT timestamp as timestamp, user as user FROM log_users WHERE user = "` + username + `"`, (err, row) => {
-                if (err) {                                                                                          // catch errors
-                    console.error(err.message);                                                                     // log
+                if (err) {                                                                                  // catch errors
+                    console.error(err.message);                                                             // log
                 }
                 
                 let time = new Date(row.timestamp)
@@ -333,13 +336,13 @@ function get_activity(req, res, next, username, role) {
         });
     }
     // close the database connection
-    db.close((err) => {                                                                                         // close database connection
-        if (err) {                                                                                              // catch errors
-            res.status(500).send('Internal Error');                                                             // send error information to client
-            return console.error(err.message);                                                                  // log
+    db.close((err) => {                                                                                     // close database connection
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
         
-        res.status(200).send(JSON.stringify(log.reverse()));                                                    // reverse array to show latest activities first
+        res.status(200).send(JSON.stringify(log.reverse()));                                                // reverse array to show latest activities first
         next();
     });
 }
@@ -356,8 +359,9 @@ async function add_user(req, res, next, username, hash, req_role) {
     if(req_role == 'admin') {
         
         // open database
-        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
-            if (err) {                                                                                          // catch errors
+        let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
+            if (err) {                                                                                      // catch errors
+                res.status(500).send('Internal Error');                                                     // send error information to client
                 return console.error(err.message);
             }
         });
@@ -368,8 +372,9 @@ async function add_user(req, res, next, username, hash, req_role) {
        
         db.serialize(() => {
           db.each(`SELECT username as username FROM users`, (err, row) => {
-              if (err) {                                                                                        // catch errors
-                  console.error(err.message);                                                                   // log
+              if (err) {                                                                                    // catch errors
+                  res.status(500).send('Internal Error');                                                   // send error information to client
+                  console.error(err.message);                                                               // log
               }
               if(username == row.username) {
                   exists = true;;
@@ -379,32 +384,32 @@ async function add_user(req, res, next, username, hash, req_role) {
         
         
         // close the database connection to wait for db.each
-        db.close((err) => {                                                                                     // close database connection
-            if (err) {                                                                                          // catch errors
-                res.status(500).send('Internal Error');                                                         // send error information to client
-                return console.error(err.message);                                                              // log
+        db.close((err) => {                                                                                 // close database connection
+            if (err) {                                                                                      // catch errors
+                res.status(500).send('Internal Error');                                                     // send error information to client
+                return console.error(err.message);                                                          // log
             }
             
             if(exists == false) {
                 // reopen database to add a new user
-                db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-                    if (err) {                                                                                  // catch errors
+                db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                       // connect to database
+                    if (err) {                                                                              // catch errors
                         return console.error(err.message);
                     }
                 });
                 
                 // insert one row into the users table
                 db.run('INSERT INTO users(username, hash, timestamp, role) VALUES("' + username + '", "' + hash + '", 0, "default")', function(err) {
-                    if (err) {                                                                                  // catch errors
-                        return console.log(err.message);                                                        // log
+                    if (err) {                                                                              // catch errors
+                        return console.log(err.message);                                                    // log
                     }
                 });
                 
                 // close the database connection
-                db.close((err) => {                                                                             // close database connection
-                    if (err) {                                                                                  // catch errors
-                        res.status(500).send('Internal Error');                                                 // send error information to client
-                        return console.error(err.message);                                                      // log
+                db.close((err) => {                                                                         // close database connection
+                    if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
+                        return console.error(err.message);                                                  // log
                     }
                     
                     res.status(200).send('OK');
@@ -432,24 +437,26 @@ CHANGE PASSWORD
 
 function change_password(req, res, next, username, hash) {
     // reopen database to add a new user
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                                   // connect to database
-        if (err) {                                                                                              // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
             return console.error(err.message);
         }
     });
     
     // change password
     db.run('UPDATE users SET hash = "' + hash + '" WHERE username = "' + username + '"', function(err) {
-        if (err) {                                                                                              // catch errors
-            return console.log(err.message);                                                                    // log
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.log(err.message);                                                                // log
         }
     });
     
     // close the database connection
-    db.close((err) => {                                                                                         // close database connection
-        if (err) {                                                                                              // catch errors
-            res.status(500).send('Internal Error');                                                             // send error information to client
-            return console.error(err.message);                                                                  // log
+    db.close((err) => {                                                                                     // close database connection
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
         
         res.status(200).send('OK');
@@ -495,6 +502,7 @@ function get_data_cp(res, datatype, interval) {
             // open database
             db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                 if (err) {                                                                                  // catch errors
+                    res.status(500).send('Internal Error');                                                 // send error information to client
                     return console.error(err.message);
                 }
             });
@@ -503,6 +511,7 @@ function get_data_cp(res, datatype, interval) {
             db.serialize(() => {
                 db.each(`SELECT timestamp as timestamp, pressure as pressure FROM pressure WHERE timestamp > ` + time_bound_old, (err, row) => {
                     if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
                         console.error(err.message);                                                         // log
                     }
                     
@@ -525,6 +534,7 @@ function get_data_cp(res, datatype, interval) {
             // open database
             db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
                 if (err) {                                                                                  // catch errors
+                    res.status(500).send('Internal Error');                                                 // send error information to client
                     return console.error(err.message);
                 }
             });
@@ -533,6 +543,7 @@ function get_data_cp(res, datatype, interval) {
             db.serialize(() => {
                 db.each(`SELECT timestamp as timestamp, fan_speed as fan_speed FROM fan_speed WHERE timestamp > ` + time_bound_old, (err, row) => {
                     if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
                         console.error(err.message);                                                         // log
                     }
                     
@@ -608,29 +619,32 @@ function send_target_fan_speed(req, res, next, value) {
 // save target values to database
 function save_target_values() {
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-        if (err) {                                                                                  // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
             return console.error(err.message);
         }
     });
 
     db.run('UPDATE target_values SET value = ' + target_pressure + ' WHERE id = "pressure";', function(err) {
-        if (err) {                                                                              // catch errors
-            return console.log(err.message);                                                    // log
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.log(err.message);                                                                // log
         }
     });
     
     db.run('UPDATE target_values SET value = ' + target_fan_speed + ' WHERE id = "fan_speed";', function(err) {
-        if (err) {                                                                              // catch errors
-            return console.log(err.message);                                                    // log
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.log(err.message);                                                                // log
         }
     });
 
     // close the database connection
-    db.close((err) => {                                                                             // close database connection
-        if (err) {                                                                                  // catch errors
-            res.status(500).send('Internal Error');                                                 // send error information to client
-            return console.error(err.message);                                                      // log
+    db.close((err) => {                                                                                     // close database connection
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
     });
 }
@@ -669,23 +683,25 @@ function set_mode(req, res, next, mode) {
 // save current mode to database
 function save_mode() {
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-        if (err) {                                                                                  // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
             return console.error(err.message);
         }
     });
 
     db.run('UPDATE target_values SET value = ' + cur_mode + ' WHERE id = "mode";', function(err) {
-        if (err) {                                                                              // catch errors
-            return console.log(err.message);                                                    // log
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.log(err.message);                                                                // log
         }
     });
 
     // close the database connection
-    db.close((err) => {                                                                             // close database connection
-        if (err) {                                                                                  // catch errors
-            res.status(500).send('Internal Error');                                                 // send error information to client
-            return console.error(err.message);                                                      // log
+    db.close((err) => {                                                                                     // close database connection
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
     });
 }
@@ -694,8 +710,9 @@ function save_mode() {
 // initialize target_pressure, target_fan_speed and mode
 function init_target_values() {
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-        if (err) {                                                                                  // catch errors
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
             return console.error(err.message);
         }
     });
@@ -703,8 +720,9 @@ function init_target_values() {
     // fetch all cars
     db.serialize(() => {
         db.each(`SELECT id as id, value as value FROM target_values`, (err, row) => {
-            if (err) {                                                                              // catch errors
-                console.error(err.message);                                                         // log
+            if (err) {                                                                                      // catch errors
+                res.status(500).send('Internal Error');                                                     // send error information to client
+                console.error(err.message);                                                                 // log
             }
             
             if(row.id == "pressure") {
@@ -718,10 +736,10 @@ function init_target_values() {
     });
 
     // close the database connection
-    db.close((err) => {                                                                             // close database connection
-        if (err) {                                                                                  // catch errors
-            res.status(500).send('Internal Error');                                                 // send error information to client
-            return console.error(err.message);                                                      // log
+    db.close((err) => {                                                                                     // close database connection
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
         
         if(cur_mode) {
@@ -757,7 +775,10 @@ function login_user(req, res, next) {
     
     // generate and compare hashes
     crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, derivedKey) => {
-        if (err) throw err;                                                                                 // catch errors
+        if (err) {
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            throw err;                                                                                      // catch errors
+        }
         
         let hash_in = derivedKey.toString('hex');                                                           // generate hash for given username and password
         let hash_db = 'init';                                                                               // stores hash from database
@@ -768,6 +789,7 @@ function login_user(req, res, next) {
         // open database
         let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
             if (err) {                                                                                      // catch errors
+                res.status(500).send('Internal Error');                                                     // send error information to client
                 return console.error(err.message);                                                          // log
             }
         });
@@ -776,6 +798,7 @@ function login_user(req, res, next) {
         db.serialize(() => {
             db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
                 if (err) {                                                                                  // catch errors
+                    res.status(500).send('Internal Error');                                                 // send error information to client
                     console.error(err.message);                                                             // log
                 }
                 
@@ -797,18 +820,25 @@ function login_user(req, res, next) {
                 let time = Date.now();
                 
                 db.run('INSERT INTO log_users(timestamp, user) VALUES("' + time + '", "' + username + '")', function(err) {
-                    if (err) {                                                                          // catch errors
-                        return console.log(err.message);                                                // log
+                    if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
+                        return console.log(err.message);                                                    // log
                     }
                 });
                 
                 db.run('UPDATE users SET timestamp = ' + time + ' WHERE username = "' + username + '";', function(err) {
                     if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
                         return console.log(err.message);                                                    // log
                     }
                 });
                 
                 db.close((err) => {
+                    if (err) {                                                                              // catch errors
+                        res.status(500).send('Internal Error');                                             // send error information to client
+                        return console.log(err.message);                                                    // log
+                    }
+                    
                     session = req.session;
                     session.userid = req.body.username;
                     res.redirect('/');
@@ -830,28 +860,30 @@ USER AUTHENTIFICATION
 
 
 // authenticate user an redirect to correct page
-function auth_user(req, res, next, redirect, arg_dyn = '') {                                                     // arg_dyn may get used, but is not required
+function auth_user(req, res, next, redirect, arg_dyn = '') {                                                // arg_dyn may get used, but is not required
     session = req.session;
     
     let role;
     
     
     // open database
-    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                           // connect to database
-        if (err) {                                                                                      // catch errors
-            return console.error(err.message);                                                          // log
+    let db = new sqlite3.Database(path_db, sqlite3.OPEN_READWRITE, (err) => {                               // connect to database
+        if (err) {                                                                                          // catch errors
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            return console.error(err.message);                                                              // log
         }
     });
 
     // fetch all users
     db.serialize(() => {
         db.each(`SELECT username as username, hash as hash, timestamp as timestamp, role as role FROM users`, (err, row) => {
-            if (err) {                                                                                  // catch errors
-                console.error(err.message);                                                             // log
+            if (err) {                                                                                      // catch errors
+                res.status(500).send('Internal Error');                                                     // send error information to client
+                console.error(err.message);                                                                 // log
             }
             
             // filter username
-            if(row.username == session.userid) {                                                        // filter users
+            if(row.username == session.userid) {                                                            // filter users
                 role = row.role;
             }
         });
@@ -859,6 +891,10 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
 
     // close the database connection
     db.close((err) => {
+        if(err) {
+            res.status(500).send('Internal Error');                                                         // send error information to client
+            console.error(err.message);
+        }
         if(session.userid){
             res.setHeader('WWW-Authenticate', 'Basic');
             switch(redirect) {
@@ -871,21 +907,21 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
                         break;
                     
                     case 'req_logout':
-                        db = new sqlite3.Database(path_db);                                         // connect to database
+                        db = new sqlite3.Database(path_db);                                                 // connect to database
                     
                         // reset timestamp to indicate log out
                         db.run('UPDATE users SET timestamp = 0 WHERE username = "' + username + '";', function(err) {
-                            if (err) {                                                              // catch errors
+                            if (err) {                                                                      // catch errors
                                 console.log('ERROR TRYING TO UPDATE THE DATABASE');
-                                return console.log(err.message);                                    // log
+                                return console.log(err.message);                                            // log
                                 
                             }
                         });
                     
-                        db.close((err) => {                                                         // close database connection
-                            if (err) {                                                              // catch errors
-                                res.status(500).send('Internal Error');                             // send error information to client
-                                return console.error(err.message);                                  // log
+                        db.close((err) => {                                                                 // close database connection
+                            if (err) {                                                                      // catch errors
+                                res.status(500).send('Internal Error');                                     // send error information to client
+                                return console.error(err.message);                                          // log
                             }
                             
                             res.status(200).send('OK');
@@ -896,20 +932,26 @@ function auth_user(req, res, next, redirect, arg_dyn = '') {                    
                     case 'add_user':
                         // generate new has to store in the database
                         crypto.pbkdf2(req.query.password, req.query.username, 100000, 64, 'sha512', (err, derivedKey) => {
-                            if (err) throw err;                                                     // catch errors
+                            if (err) {
+                                res.status(500).send('Internal Error');                                     // send error information to client
+                                throw err;                                                                  // catch errors
+                            }
                             
                             let hash = derivedKey.toString('hex');
-                            add_user(req, res, next, req.query.username, hash, role);               // add a new user with the given username and the created hash
+                            add_user(req, res, next, req.query.username, hash, role);                       // add a new user with the given username and the created hash
                         });
                         break;
                     
                     case 'change_password':
                         // generate new has to store in the database
                         crypto.pbkdf2(req.query.password, session.userid, 100000, 64, 'sha512', (err, derivedKey) => {
-                            if (err) throw err;                                                     // catch errors
+                            if (err) {
+                                res.status(500).send('Internal Error');                                     // send error information to client
+                                throw err;                                                                  // catch errors
+                            }
                             
                             let hash = derivedKey.toString('hex');
-                            change_password(req, res, next, session.userid, hash);                        // add a new user with the given username and the created hash
+                            change_password(req, res, next, session.userid, hash);                          // add a new user with the given username and the created hash
                         });
                         break;
                     
