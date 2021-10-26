@@ -205,6 +205,18 @@ If the user does not have admin privileges, the server will select all entries, 
 
 
 %--------------------------------------------------------------------------------------------------
+% Logging a user out
+%--------------------------------------------------------------------------------------------------
+
+\section{Login/logout page}
+\label{sec:login_and_logout_page}
+
+The login/logout page is the only page of the web interface that does not show the navigation menu as those pages can only be accessed by logged in users. The only thing the login page provides is a form to enter a username and a password. After submitting, the client will send a post request to the server. If the entered credentials are valid, the server will return a session cookie (chapter \ref{subsec:user_authentication}) and redirect to the control panel. Otherwise, the server will rerender the login page. Rendering the login page as an ejs file allows the server to pass parameters. In this case, the server will pass an \textit{error} text which will be displayed underneath the form if the entered username or password are not correct.
+
+
+
+
+%--------------------------------------------------------------------------------------------------
 % Displaying warings
 %--------------------------------------------------------------------------------------------------
 
@@ -226,18 +238,6 @@ It is important, that the user gets the information about an error immediately. 
 As the client establishes a new WebSocket connection to the server each time a new page is loaded, the client needs to keep track of the errors it has already displayed a warning for. To do so, the client stores the error ID of each new error in an \textit{error} cookie. Each time the client receives a new error message, it compares the received ID with the ID stored in the cookie. If the IDs are equal, a warning has already been displayed for this error. Otherwise, the client will overwrite the cookies' value with the new ID and display a new alert. This allows the user to navigate between different interface pages without triggering multiple alerts for the same error.
 
 The \textit{expires} parameter of the cookie will not be set by the client on purpose. This will automatically clear the cookie after restarting the browser, but not after a specific time.
-
-
-
-
-%--------------------------------------------------------------------------------------------------
-% Logging a user out
-%--------------------------------------------------------------------------------------------------
-
-\section{Login/logout page}
-\label{sec:login_and_logout_page}
-
-The login/logout page is the only page of the web interface that does not show the navigation menu as those pages can only be accessed by logged in users. The only thing the login page provides is a form to enter a username and a password. After submitting, the client will send a post request to the server. If the entered credentials are valid, the server will return a session cookie (chapter \ref{subsec:user_authentication}) and redirect to the control panel. Otherwise, the server will rerender the login page. Rendering the login page as an ejs file allows the server to pass parameters. In this case, the server will pass an \textit{error} text which will be displayed underneath the form if the entered username or password are not correct.
 
 
 
