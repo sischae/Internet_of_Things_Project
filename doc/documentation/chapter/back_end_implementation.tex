@@ -263,7 +263,7 @@ While the user is using the control panel, the error indicator is automatically 
 
 Another problem is, that the IoT device keeps sending errors until the target pressure is reached. This could either happen after some more time or after the user has set a new, reachable target pressure. As the server should not send multiple error messages to the client that would trigger an alert each time a new set of sensor data is being received, some kind of filter is essential.
 
-To do so, the server sets a bit indicating if the error bit was set in the last message received. This allows the server to recognize new errors. If a new error is being received, the error gets passed to the client. Otherwise, the error bit of the WebSocket message will be set to \textit{false} even if the error is still active. The client will then only display an alert once per each new error.
+To do so, the server sets a bit indicating if the error bit was set in the last message received. This allows the server to recognize new errors. To be able to separate two errors from each other the server assigns an error ID to each error. Each time a new error has been received, the server saves a current timestamp to this ID and passes it to the client as the \textit{error} parameter. If no new error has been received, the error parameter of the WebSocket message will be set to \textit{false} even if the error is still active. The client will then only display an alert once per each new error.
 
 
 \subsubsection{Sending commands}

@@ -36,6 +36,9 @@ const mqtt_topic_pub = "controller/settings";
 const mqtt_topic_sub = "controller/status";
 
 
+let error_last = false;                                                                                     // indicator to detect a new error via MQTT
+var recent_error_id = 0;                                                                                    // ID for most recent error
+
 // setup connection
 var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
 mqtt_client.on("connect",function(){
@@ -47,6 +50,21 @@ console.log('Connected to MQTT broker. Subscribing to ' + mqtt_topic_sub);
 
 mqtt_client.on('message',function(topic, message, packet) {
     let msg = JSON.parse(message);                                                                          // parse received data
+    
+    // check for error
+    if(msg.error) {
+        if(!error_last) {
+            let tim_now = Date.now();
+            if(tim_now - recent_error_id > 20 * 1000) {                                                 // new errors possible every 20s
+                recent_error_id = tim_now;
+            }
+        }
+        error_last = true;
+    } else {
+        error_last = false;
+        recent_error_id = 0;
+    }
+    
     mqtt_msg_to_db(msg.nr, msg.speed, msg.setpoint, msg.pressure, msg.auto, msg.error);                     // add received data to the database
 });
 
@@ -61,10 +79,11 @@ WEBSOCKET SETUP
 var webSocketServer = new (require('ws')).Server({port: (process.env.PORT || 8000)}), webSockets = {};
 console.log('WebSocket server running. Listening on port 8000...');
 
+
 // handle incoming connections from clients
 webSocketServer.on('connection', (ws, req) => {
-    let error_last = false;                                                                                     // indicator to detect a new error via MQTT
     let client_cp = false;                                                                                      // control panel: true, other pages: false
+    let last_error = 0;
     
     // identify client (important for closing the connection later on)
     const key = req.headers['sec-websocket-key'];
@@ -95,31 +114,15 @@ webSocketServer.on('connection', (ws, req) => {
         let msg_received = JSON.parse(message);                                                                 // parse received data
         
         if(client_cp) {                                                                                         // send data to control panel only
-            let msg_send = JSON.parse('{"id": "data", "speed": ' + msg_received.speed + ', "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + msg_received.error + '}');
+            ws.send('{"id": "data", "speed": ' + msg_received.speed + ', "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
             
-            // check for error
-            if(msg_send.error) {
-                if(!error_last) {
-                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
-                } else {
-                    msg_send.error = false;                                                                     // do not send error
-                    ws.send(JSON.stringify(msg_send));                                                          // forward new data to the client
-                }
-                error_last = true;
-            } else {
-                msg_send.error = false;                                                                         // do not send error
-                ws.send(JSON.stringify(msg_send));                                                              // forward new data to the client
-                error_last = false;
-            }
         } else {
             // check for error
             if(msg_received.error) {
-                if(!error_last) {
-                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + '}');
+                if(last_error != recent_error_id) {
+                    last_error = recent_error_id;
+                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
                 }
-                error_last = true;
-            } else {
-                error_last = false;
             }
         }
     });
