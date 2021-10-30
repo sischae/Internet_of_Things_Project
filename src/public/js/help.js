@@ -11,14 +11,7 @@ document.getElementById("logout").addEventListener("click", function(e) {
         method: 'get',
     }).then(res => {
         if(res.status == 200) {
-            logout(function (err) {
-                if (err) {
-                    throw err;
-                }
-                
-                ws_client.close();                                                                      // close websocket connection
-                window.location.href = "/logout";
-            });
+            window.location.href = "/logout";
         }
     });
 });
@@ -30,30 +23,10 @@ document.getElementById("menu_logout_text").addEventListener("click", function(e
         method: 'get',
     }).then(res => {
         if(res.status == 200) {
-            logout(function (err) {
-                if (err) {
-                    throw err;
-                }
-                
-                ws_client.close();                                                                      // close websocket connection
-                window.location.href = "/logout";
-            });
+            window.location.href = "/logout";
         }
     });
 });
-
-
-function logout (done) {
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/logout", true, "invalid", "invalid");
-    xhr.onload = function () {
-        done(null, xhr.response);
-    };
-    xhr.onerror = function () {
-        done(xhr.response);
-    };
-    xhr.send();
-}
 
 
 
