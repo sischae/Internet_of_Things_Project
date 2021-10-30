@@ -15,6 +15,7 @@
                 <a href="/" class="flex_title" id="flex_title">VentPro</a>
             </div>
             
+            
             <div class="flex_menu" id="flex_menu">
                 <a href="/help" class="flex_menu_text_active" id="menu_help_text">
                     Help
@@ -48,93 +49,95 @@
         
            
         <div class="flex_help">
-            <div class="flex_help_box"> 
-                <!-- <h1>FAQ:</h1> -->
+            <div class="flex_help_box">
                 <div id="faq_menu">
-                     <!-- <span><b>subjects:</b></span> -->
-                             <span><a href="#faq_control_panel">control panel</a></span>
-                             <span class="trenner"> • </span>
-                             <span><a href="#faq_settings">settings</a></span>
-                             <span class="trenner"> • </span>
-                             <span><a href="https://github.com/sischae/Internet_of_Things_Project/raw/main/doc/user_manual/user_manual.pdf" target="_blank">download manual</a></span>
+                    <span><a href="#faq_control_panel">control panel</a></span>
+                    <span class="trenner"> • </span>
+                    <span>
+                        <a href="#faq_settings">settings</a>
+                    </span>
+                    <span class="trenner"> • </span>
+                    <span>
+                        <a href="https://github.com/sischae/Internet_of_Things_Project/raw/main/doc/user_manual/user_manual.pdf" target="_blank">download manual</a>
+                    </span>
                 </div>
                 
+                
                 <div class="help-section">
-
-                        <div class="help-text">
-                            <h2 id="faq_control_panel">Control Panel</h2>
-                                <button class="accordion">How do I change the mode?</button>
-                                    <div class="panel">
-                                        <p class="p-help">
-                                            In VentPro it is possible to change between <b></b>automatic</b> and <b>manual mode</b>.
-                                            This is possible by switching the button on the control panel page.
-                                        </p>
-                                    </div>
-                                <button class="accordion">What is the <b>difference</b> between <b>automatic</b> mode and <b>manual</b> mode?</button>
-                                    <div class="panel"> 
-                                        <p class="p-help">
-                                            In <b>automatic mode</b> it is possible to set the <b>pressure</b> of the ventilaton controller
-                                            to a targeted pressure between 0 Pa and 120 Pa.
-                                            In <b>manual mode</b> however it is possible to set the <b>fan speed</b> of the ventilation controller to a targeted speed 
-                                            between 0% and 100%. 
-                                        </p>
-                                    </div>
-                                <button class="accordion">How do I change the <b>target pressure</b>?</button>
-                                    <div class="panel">
-                                            <p class="p-help">
-                                                The target pressure can only be adjusted in automatic mode. To do this, the slider must be moved to the desired target value. It is possible to choose a value between 0 Pa und 120 Pa. 
-                                                Once you stop moving the handle the system will automatically set the pressure to the targeted value. If the targeted pressure is not reached within a reasonable time there is a notification. 
-                                                The current pressure is always written above the graph.
-                                            </p>
-                                        </div>
-                                    <button class="accordion">How is the <b>pressure</b> monitored?</button>
-                                        <div class="panel">
-                                            <p class="p-help">
-                                                The current pressure can be viewed in automatic mode. There, the current pressure is displayed as well as pressure changes overtime within a graph.
-                                                With the buttons underneath the graph it is possible to switch between all data, data from the current day or the last minute.
-                                                Hovering over the graph displays the pressure at the corresponding time.
-                                            </p>
-                                        </div>
-                                    <button class="accordion">How is the <b>fan speed changed</b>?</button>
-                                        <div class="panel">
-                                                <p class="p-help">
-                                                    The fan speed can only be adjusted in manual mode. To do this, the slider must be moved to the desired target value. It is possible to choose a value between 0% und 100%. 
-                                                    Once you stop moving the handle the system will automatically set the fan speed to the targeted value. If the targeted speed is not reached within a reasonable time there is a notification. 
-                                                    The current fan speed is always written above the graph.
-                                                </p>
-                                            </div>
-                                        <button class="accordion">How is the <b>fan speed monitored</b>?</button>
-                                            <div class="panel">
-                                                <p class="p-help">
-                                                    The current fan speed can be viewed in manual mode. There, the current fan speed is displayed as well as changes in the fan speed overtime within a graph.
-                                                    With the buttons underneath the graph it is possible to switch between all data, data from the current day or the last minute.
-                                                    Hovering over the graph displays the fan speed at the corresponding time.
-                                                </p>
-                                            </div>
-                                        <br>
-                            <h2 id="faq_settings">Settings</h2>
-                                <button class="accordion">How do I <b>change</b> my <b>password</b>?</button>
-                                    <div class="panel">
-                                        <p class="p-help">
-                                                The password can be changed in the <a href="/settings">settings</a> section. There you should enter the new password and confirm 
-                                                it by clicking the button.
-                                        </p>
-                                    </div>
-                                <button class="accordion">What is shown in <b>log activity</b>?</button>
-                                    <div class="panel"> 
-                                        <p class="p-help">
-                                                If you are logged in as admin, you can see in the log-in activities which users have logged in and when. 
-                                                So it is possible to see when changes were made to the settings of the ventilation controller.  
-                                        </p>
-                                    </div>
-                                <button class="accordion">How do I add a <b>new user</b>?</button>
-                                    <div class="panel">
-                                        <p class="p-help">
-                                                If you are logged in as admin you have the possibility to add a new user. 
-                                                For this you only have to enter a username and a password and confirm it with a click on the button. 
-                                                The password should be changed at the first login of the new user.
-                                        </p>
-                                    </div>
+                    <div class="help-text">
+                        <h2 id="faq_control_panel">Control Panel</h2>
+                        <button class="accordion">How do I change the mode?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                In VentPro it is possible to change between <b></b>automatic</b> and <b>manual mode</b>.
+                                This is possible by switching the button on the control panel page.
+                            </p>
+                        </div>
+                        <button class="accordion">What is the <b>difference</b> between <b>automatic</b> mode and <b>manual</b> mode?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                In <b>automatic mode</b> it is possible to set the <b>pressure</b> of the ventilaton controller
+                                to a targeted pressure between 0 Pa and 120 Pa.
+                                In <b>manual mode</b> however it is possible to set the <b>fan speed</b> of the ventilation controller to a targeted speed
+                                between 0% and 100%.
+                            </p>
+                        </div>
+                        <button class="accordion">How do I change the <b>target pressure</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                The target pressure can only be adjusted in automatic mode. To do this, the slider must be moved to the desired target value. It is possible to choose a value between 0 Pa und 120 Pa.
+                                Once you stop moving the handle the system will automatically set the pressure to the targeted value. If the targeted pressure is not reached within a reasonable time there is a notification.
+                                The current pressure is always written above the graph.
+                            </p>
+                        </div>
+                        <button class="accordion">How is the <b>pressure</b> monitored?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                The current pressure can be viewed in automatic mode. There, the current pressure is displayed as well as pressure changes overtime within a graph.
+                                With the buttons underneath the graph it is possible to switch between all data, data from the current day or the last minute.
+                                Hovering over the graph displays the pressure at the corresponding time.
+                            </p>
+                        </div>
+                        <button class="accordion">How is the <b>fan speed changed</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                The fan speed can only be adjusted in manual mode. To do this, the slider must be moved to the desired target value. It is possible to choose a value between 0% und 100%.
+                                Once you stop moving the handle the system will automatically set the fan speed to the targeted value. If the targeted speed is not reached within a reasonable time there is a notification.
+                                The current fan speed is always written above the graph.
+                            </p>
+                        </div>
+                        <button class="accordion">How is the <b>fan speed monitored</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                The current fan speed can be viewed in manual mode. There, the current fan speed is displayed as well as changes in the fan speed overtime within a graph.
+                                With the buttons underneath the graph it is possible to switch between all data, data from the current day or the last minute.
+                                Hovering over the graph displays the fan speed at the corresponding time.
+                            </p>
+                        </div>
+                        <br>
+                        <h2 id="faq_settings">Settings</h2>
+                        <button class="accordion">How do I <b>change</b> my <b>password</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                The password can be changed in the <a href="/settings">settings</a> section. There you should enter the new password and confirm
+                                it by clicking the button.
+                            </p>
+                        </div>
+                        <button class="accordion">What is shown in <b>log activity</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                If you are logged in as admin, you can see in the log-in activities which users have logged in and when.
+                                So it is possible to see when changes were made to the settings of the ventilation controller.
+                            </p>
+                        </div>
+                        <button class="accordion">How do I add a <b>new user</b>?</button>
+                        <div class="panel">
+                            <p class="p-help">
+                                If you are logged in as admin you have the possibility to add a new user.
+                                For this you only have to enter a username and a password and confirm it with a click on the button.
+                                The password should be changed at the first login of the new user.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

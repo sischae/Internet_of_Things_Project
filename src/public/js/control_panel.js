@@ -44,7 +44,7 @@ document.getElementById("menu_logout_text").addEventListener("click", function(e
 
 
 function logout (done) {
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", "/logout", true, "invalid", "invalid");
     xhr.onload = function () {
         done(null, xhr.response);
@@ -403,6 +403,7 @@ function get_target_values() {
     });
 }
 get_target_values();
+
 
 
 

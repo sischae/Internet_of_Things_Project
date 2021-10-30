@@ -16,7 +16,7 @@ document.getElementById("logout").addEventListener("click", function(e) {
                     throw err;
                 }
                 
-                ws_client.close();                                                                      // close websocket connection
+                ws_client.close();
                 window.location.href = "/logout";
             });
         }
@@ -35,7 +35,7 @@ document.getElementById("menu_logout_text").addEventListener("click", function(e
                     throw err;
                 }
                 
-                ws_client.close();                                                                      // close websocket connection
+                ws_client.close();
                 window.location.href = "/logout";
             });
         }
@@ -44,7 +44,7 @@ document.getElementById("menu_logout_text").addEventListener("click", function(e
 
 
 function logout (done) {
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", "/logout", true, "invalid", "invalid");
     xhr.onload = function () {
         done(null, xhr.response);
@@ -62,11 +62,11 @@ function logout (done) {
 LOGIN ACTIVITY
 ******************************************************************************************/
 
-let log = JSON.parse('[]');                                                                             // stores all cars returned from the server
-let list_length = 8;
-let pages = 0;
-let cur_page = 0;
-let last_amm = 0;
+var log = JSON.parse('[]');                                                                             // stores all cars returned from the server
+var list_length = 8;                                                                                    // ammount of elements per page
+var pages = 0;
+var cur_page = 0;
+var last_amm = 0;
 
 // fetch all activities
 fetch('/activity', {                                                                                    // send get request to fetch all cars in the system
@@ -222,6 +222,7 @@ document.getElementById('flex_acc_change_pw').addEventListener('submit', e => {
         }
     });
 });
+
 
 
 

@@ -1,5 +1,9 @@
 'use strict';
 
+/******************************************************************************************
+GENERAL SETUP & REQUIREMENTS
+******************************************************************************************/
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -10,14 +14,13 @@ const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
 const cookieParser = require("cookie-parser");
 const sessions = require('express-session');
-
 const mqtt = require('mqtt');
 
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.use('/public', express.static(path.join(__dirname, 'public')));
-app.set('views', path.join(__dirname, '/views'));
 
+app.set('views', path.join(__dirname, '/views'));
 app.set('view engine', 'ejs');
 
 const path_db = __dirname + '/data/data.db';
@@ -36,7 +39,7 @@ const mqtt_topic_pub = "controller/settings";
 const mqtt_topic_sub = "controller/status";
 
 
-let error_last = false;                                                                                     // indicator to detect a new error via MQTT
+var error_last = false;                                                                                     // indicator to detect a new error via MQTT
 var recent_error_id = 0;                                                                                    // ID for most recent error
 
 // setup connection
@@ -44,6 +47,7 @@ var mqtt_client = mqtt.connect(mqtt_ip + ":" + mqtt_port);
 mqtt_client.on("connect",function(){
     // connected to MQTT broker
 });
+
 
 mqtt_client.subscribe(mqtt_topic_sub);                                                                      // subscribe to the MQTT topic using the provided client
 console.log('Connected to MQTT broker. Subscribing to ' + mqtt_topic_sub);
@@ -88,7 +92,7 @@ webSocketServer.on('connection', (ws, req) => {
     // identify client (important for closing the connection later on)
     const key = req.headers['sec-websocket-key'];
     ws.upgradeReq = req;
-    var userID = parseInt(ws.upgradeReq.url.substr(1), 10);
+    let userID = parseInt(ws.upgradeReq.url.substr(1), 10);
     webSockets[userID] = ws;
 
 
@@ -118,11 +122,9 @@ webSocketServer.on('connection', (ws, req) => {
             
         } else {
             // check for error
-            if(msg_received.error) {
-                if(last_error != recent_error_id) {
-                    last_error = recent_error_id;
-                    ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
-                }
+            if(msg_received.error && last_error != recent_error_id) {
+                last_error = recent_error_id;
+                ws.send('{"id": "error", "setpoint": ' + msg_received.setpoint + ', "pressure": ' + msg_received.pressure + ', "error": ' + recent_error_id + '}');
             }
         }
     });
@@ -204,7 +206,6 @@ app.post('/login_user',(req,res, next) => {
 
 // logout
 app.get('/req_logout', async (req, res, next) => {
-    //auth_user(req, res, next, 'req_logout');
     req.session.destroy();
     res.redirect('/logout');
 });
@@ -752,6 +753,8 @@ function init_target_values() {
 init_target_values();
 
 
+
+
 /******************************************************************************************
 RETURN TARGET VALUES FOR PRESSURE AND FAN SPEED
 ******************************************************************************************/
@@ -770,8 +773,8 @@ USER LOGIN
 
 function login_user(req, res, next) {
     // get username and password from body
-    var username = req.body.username;
-    var password = req.body.password;
+    let username = req.body.username;
+    let password = req.body.password;
     
     // generate and compare hashes
     crypto.pbkdf2(password, username, 100000, 64, 'sha512', (err, derivedKey) => {
@@ -862,7 +865,6 @@ USER AUTHENTIFICATION
 // authenticate user an redirect to correct page
 function auth_user(req, res, next, redirect, arg_dyn = '') {                                                // arg_dyn may get used, but is not required
     session = req.session;
-    
     let role;
     
     
