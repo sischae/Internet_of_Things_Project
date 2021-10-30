@@ -15,6 +15,7 @@ The following packages are necessary to run the code. Install packages using "np
   - express
   - ejs
   - express-session
+  - mqtt
   - sqlite3
   - ws  
 
