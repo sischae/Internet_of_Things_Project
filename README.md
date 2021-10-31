@@ -21,15 +21,15 @@ The following packages are necessary to run the code. Install packages using "np
 
 The initial admin passwort is "admin" and can be used to sign in on the web interface. Please change the admin password on the settings page afterward.
 
-Further information about setting up the server can be found at chapter 1.1 Installation of the [Technical Documentation](https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf).
+Further information about setting up the server can be found at chapter "1. Installation" of the [Technical Documentation](https://github.com/sischae/VentPro/raw/main/doc/documentation/documentation.pdf).
   
 ## Usage
 
 To start the server, go to the /src directory and run "node server.js". The Server will listen to port 3000 and will be accessible threw any browser via http://localhost:3000.
 
-All information about using the web interface can be found in the [User Manual](https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/user_manual/user_manual.pdf).
+All information about using the web interface can be found in the [User Manual](https://github.com/sischae/VentPro/raw/main/doc/user_manual/user_manual.pdf).
 
-Technical information about the implementation of front and back and can be found in the [Technical Documentation](https://github.com/sischae/Internet_of_Things_Project/blob/main/doc/documentation/documentation.pdf).
+Technical information about the implementation of front and back and can be found in the [Technical Documentation](https://github.com/sischae/VentPro/raw/main/doc/documentation/documentation.pdf).
   
 
 ## Team
